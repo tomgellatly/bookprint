@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookprint Admin</title>
+<style>
+  :root{
+    --paper:#fdfbf4; --paper-2:#fffefb; --cream-edge:#ece6d8;
+    --ink:#33302a; --ink-soft:#665f53; --ink-faint:#a39b8b;
+    --c-lime:#8cb83f; --c-lime-d:#6a972b; --c-teal:#3fae8f; --c-teal-d:#2a8e73;
+    --c-amber:#f5a623; --c-rose:#f0664f; --shadow:rgba(110,80,30,0.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:system-ui,sans-serif;
+    font-size:14px;line-height:1.5;padding:24px;}
+  h1{font-size:22px;font-weight:700;margin-bottom:6px;}
+  h2{font-size:16px;font-weight:700;margin:28px 0 10px;color:var(--c-teal-d);}
+  h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--ink-faint);margin:20px 0 8px;}
+  .login{max-width:340px;margin:80px auto;background:var(--paper-2);
+    border-radius:18px;padding:28px;box-shadow:0 4px 18px var(--shadow);}
+  .login h1{margin-bottom:18px;}
+  input[type=password]{width:100%;border:2px solid var(--cream-edge);background:var(--paper);
+    border-radius:10px;padding:11px 14px;font-size:15px;font-family:inherit;color:var(--ink);outline:none;}
+  input[type=password]:focus{border-color:var(--c-lime);}
+  .btn{display:inline-flex;align-items:center;gap:7px;border:none;cursor:pointer;
+    font-family:inherit;font-weight:700;font-size:13px;border-radius:10px;
+    padding:10px 18px;transition:.14s;}
+  .btn-primary{background:var(--c-lime);color:#fff;}
+  .btn-primary:hover{background:var(--c-lime-d);}
+  .btn-outline{background:var(--paper-2);color:var(--ink);border:2px solid var(--cream-edge);}
+  .btn-outline:hover{border-color:var(--c-teal);}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .err{color:var(--c-rose);font-size:13px;margin-top:8px;display:none;}
+  #dashboard{display:none;}
+  .toolbar{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;align-items:center;}
+  .stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
+  .stat{background:var(--paper-2);border-radius:14px;padding:14px 20px;
+    box-shadow:0 2px 8px var(--shadow);min-width:110px;}
+  .stat .sv{font-size:28px;font-weight:800;color:var(--c-teal-d);}
+  .stat .sl{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em;}
+
+  /* custom mechanisms section — most important */
+  .customs-section{background:var(--paper-2);border-radius:16px;padding:20px;
+    box-shadow:0 3px 12px var(--shadow);margin-bottom:28px;border-left:4px solid var(--c-amber);}
+  .customs-section h2{margin-top:0;color:var(--c-amber);}
+  .custom-entry{border-bottom:1px solid var(--cream-edge);padding:10px 0;}
+  .custom-entry:last-child{border-bottom:none;}
+  .custom-raw{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+  .custom-meta{font-size:12px;color:var(--ink-faint);}
+  .badge{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:700;}
+  .badge-novel{background:#fff3cd;color:#856404;}
+  .badge-mapped{background:#d1eddf;color:#155724;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--cream-edge);
+    font-weight:700;color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.07em;}
+  tbody tr:hover{background:var(--cream-edge);}
+  td{padding:7px 10px;border-bottom:1px solid var(--cream-edge);vertical-align:top;}
+  .mech-section{margin-bottom:28px;}
+  .score-bar{display:inline-block;height:8px;border-radius:4px;background:var(--c-teal);
+    min-width:4px;vertical-align:middle;margin-right:6px;}
+  .loading{color:var(--ink-faint);padding:40px 0;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="login" id="loginPanel">
+  <h1>Bookprint Admin</h1>
+  <p style="color:var(--ink-soft);margin-bottom:16px;font-size:13px;">Enter the admin password to view data.</p>
+  <input type="password" id="pwInput" placeholder="Password" autocomplete="current-password">
+  <div style="margin-top:12px;display:flex;gap:10px;align-items:center;">
+    <button class="btn btn-primary" id="loginBtn">Sign in</button>
+    <span class="err" id="loginErr">Incorrect password.</span>
+  </div>
+</div>
+
+<div id="dashboard">
+  <h1>Bookprint Admin</h1>
+
+  <div class="toolbar">
+    <button class="btn btn-outline" id="exportCsvBtn">Export CSV</button>
+    <button class="btn btn-outline" id="exportJsonBtn">Export JSON</button>
+    <button class="btn btn-outline" id="signOutBtn">Sign out</button>
+  </div>
+
+  <div class="stat-row" id="statRow"></div>
+
+  <!-- Custom mechanisms — most prominent -->
+  <div class="customs-section">
+    <h2>Custom mechanisms (free text)</h2>
+    <p style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;">
+      What readers typed when none of the taxonomy labels fit. Use these to evolve the taxonomy.
+    </p>
+    <div id="customsList"><div class="loading">Loading…</div></div>
+  </div>
+
+  <!-- ELO leaderboard -->
+  <h2>Top books per mechanism (ELO)</h2>
+  <div id="eloSection"><div class="loading">Loading…</div></div>
+
+  <!-- Recent votes -->
+  <h2>Recent votes</h2>
+  <table id="votesTable">
+    <thead><tr>
+      <th>Time</th><th>Seed</th><th>Mechanism</th><th>Candidate</th><th>Verdict</th>
+    </tr></thead>
+    <tbody id="votesTbody"><tr><td colspan="5" class="loading">Loading…</td></tr></tbody>
+  </table>
+</div>
+
+<script>
+let _data = null;
+
+function $(id){ return document.getElementById(id); }
+function ts(ms){ return ms ? new Date(ms).toLocaleString() : "—"; }
+function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+// ---------- login ----------
+$('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
+$('loginBtn').onclick = login;
+
+async function login(){
+  const pw = $('pwInput').value;
+  $('loginBtn').disabled = true;
+  $('loginErr').style.display = 'none';
+  try {
+    const res = await fetch('/.netlify/functions/admin', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ password: pw })
+    });
+    if(!res.ok){ throw new Error('bad'); }
+    _data = await res.json();
+    $('loginPanel').style.display = 'none';
+    $('dashboard').style.display = 'block';
+    render(_data);
+  } catch {
+    $('loginErr').style.display = 'inline';
+    $('loginBtn').disabled = false;
+  }
+}
+
+$('signOutBtn').onclick = () => {
+  _data = null;
+  $('pwInput').value = '';
+  $('loginPanel').style.display = 'block';
+  $('dashboard').style.display = 'none';
+};
+
+// ---------- render ----------
+function render(data){
+  const { votes, customs, eloAggregates } = data;
+
+  // stats
+  $('statRow').innerHTML = `
+    <div class="stat"><div class="sv">${votes.length}</div><div class="sl">Total votes</div></div>
+    <div class="stat"><div class="sv">${customs.length}</div><div class="sl">Custom mechanisms</div></div>
+    <div class="stat"><div class="sv">${new Set(votes.map(v=>v.anonId)).size}</div><div class="sl">Unique users</div></div>
+    <div class="stat"><div class="sv">${customs.filter(c=>c.isNovel).length}</div><div class="sl">Novel (no match)</div></div>
+  `;
+
+  // custom mechanisms
+  if(customs.length === 0){
+    $('customsList').innerHTML = '<p style="color:var(--ink-faint);font-size:13px;">None yet.</p>';
+  } else {
+    $('customsList').innerHTML = customs.map(c => `
+      <div class="custom-entry">
+        <div class="custom-raw">"${esc(c.rawText)}"</div>
+        <div class="custom-meta">
+          <b>${esc(c.seedTitle)}</b>${c.seedAuthor ? ' by '+esc(c.seedAuthor) : ''} ·
+          Nearest: <code>${esc(c.nearestCode)}</code>
+          ${c.isNovel
+            ? `<span class="badge badge-novel">Novel</span>${c.suggestedLabel ? ' — suggested: <em>'+esc(c.suggestedLabel)+'</em>' : ''}`
+            : '<span class="badge badge-mapped">Mapped</span>'}
+          · ${ts(c.serverTimestamp)}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ELO per mechanism
+  const mechCodes = Object.keys(eloAggregates);
+  if(mechCodes.length === 0){
+    $('eloSection').innerHTML = '<p style="color:var(--ink-faint);font-size:13px;">No votes yet.</p>';
+  } else {
+    $('eloSection').innerHTML = mechCodes.sort().map(code => {
+      const books = Object.values(eloAggregates[code])
+        .sort((a,b) => b.score - a.score)
+        .slice(0, 10);
+      const maxScore = books[0]?.score || DEFAULT_ELO;
+      return `
+        <div class="mech-section">
+          <h3>${esc(code)}</h3>
+          <table>
+            <thead><tr><th>Book</th><th>Author</th><th>Score</th><th>Yes</th><th>No</th></tr></thead>
+            <tbody>${books.map(b => {
+              const barW = Math.max(4, Math.round(((b.score - 1200) / (maxScore - 1200 || 1)) * 80));
+              return `<tr>
+                <td>${esc(b.title)}</td>
+                <td>${esc(b.author)}</td>
+                <td><span class="score-bar" style="width:${barW}px"></span>${b.score}</td>
+                <td>${b.yes||0}</td><td>${b.no||0}</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>
+        </div>`;
+    }).join('');
+  }
+
+  // votes table (most recent first, cap at 200 for page performance)
+  const shown = votes.slice(0, 200);
+  $('votesTbody').innerHTML = shown.length === 0
+    ? '<tr><td colspan="5" style="color:var(--ink-faint)">No votes yet.</td></tr>'
+    : shown.map(v => `<tr>
+        <td>${ts(v.serverTimestamp)}</td>
+        <td>${esc(v.seedTitle)}</td>
+        <td>${esc(v.mechanismCode)}</td>
+        <td>${esc(v.candidateTitle)}</td>
+        <td style="font-weight:700;color:${v.verdict==='yes'?'var(--c-lime-d)':v.verdict==='no'?'var(--c-rose)':'var(--ink-faint)'}">${esc(v.verdict)}</td>
+      </tr>`).join('');
+}
+
+// ---------- exports ----------
+$('exportJsonBtn').onclick = () => {
+  if(!_data) return;
+  const blob = new Blob([JSON.stringify(_data, null, 2)], { type: 'application/json' });
+  download(blob, 'bookprint-export.json');
+};
+
+$('exportCsvBtn').onclick = () => {
+  if(!_data) return;
+  const { votes, customs } = _data;
+  const rows = [
+    ['type','serverTimestamp','anonId','seedTitle','seedAuthor','mechanismCode','candidateTitle','candidateAuthor','verdict','rawText','nearestCode','isNovel','suggestedLabel'],
+    ...votes.map(v => ['vote', ts(v.serverTimestamp), v.anonId||'', v.seedTitle||'', v.seedAuthor||'', v.mechanismCode||'', v.candidateTitle||'', v.candidateAuthor||'', v.verdict||'','','','','']),
+    ...customs.map(c => ['custom', ts(c.serverTimestamp), c.anonId||'', c.seedTitle||'', c.seedAuthor||'','','','','', c.rawText||'', c.nearestCode||'', c.isNovel?'true':'false', c.suggestedLabel||''])
+  ];
+  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+  download(new Blob([csv], { type: 'text/csv' }), 'bookprint-export.csv');
+};
+
+function download(blob, name){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+const DEFAULT_ELO = 1500;
+</script>
+</body>
+</html>

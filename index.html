@@ -409,9 +409,25 @@ const SEED_CHIPS = ["Piranesi","Project Hail Mary","The Remains of the Day","Sta
 
 // ---- STORAGE ----------------------------------------------------------------
 // NOTE: Using localStorage — data is per-device/per-browser only.
-// A real shared backend (for global ELO rankings and the Dispensary) is the next phase.
+// Central recording goes to Netlify Blobs via /record; a shared leaderboard is the next phase.
 const ELO_KEY="bp_elo_v1", PROFILE_KEY="bp_profile_v1", PENDING_KEY="bp_pending_v1";
+const ANON_KEY="bp_anon_id_v1";
 const DEFAULT_ELO=1500, K=32;
+
+// Stable anonymous identifier — generated once per browser, never contains personal data.
+function getAnonId(){
+  let id=localStorage.getItem(ANON_KEY);
+  if(!id){ id=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2); localStorage.setItem(ANON_KEY,id); }
+  return id;
+}
+
+// Fire-and-forget POST to the record function; never blocks the UI.
+function recordEvent(payload){
+  fetch("/.netlify/functions/record",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({...payload,anonId:getAnonId()})
+  }).catch(e=>console.warn("record failed",e));
+}
 async function sget(k){ try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;} }
 async function sset(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){console.warn(e);} }
 async function sdel(k){ try{localStorage.removeItem(k);}catch(e){} }
@@ -689,6 +705,8 @@ function renderMechOptions(codes){
       STATE.pending.push({text:txt,nearest:r.nearest,isNovel:!!r.isNovel,
         suggestedLabel:r.suggestedLabel||"",book:STATE.seed.title,at:Date.now()});
       await sset(PENDING_KEY,STATE.pending);
+      recordEvent({type:"custom_mechanism",seedTitle:STATE.seed.title,seedAuthor:STATE.seed.author,
+        rawText:txt,nearestCode:r.nearest,isNovel:!!r.isNovel,suggestedLabel:r.suggestedLabel||""});
       chooseMech(r.nearest, txt);
     }catch(e){ $('customGo').disabled=false;$('customGo').textContent="Use this";toast("Try rephrasing"); }
   };
@@ -778,6 +796,8 @@ async function castVote(verdict){ // 'yes' | 'no' | 'skip'
     STATE.profile.votes=(STATE.profile.votes||0)+1;
     STATE.profile.mechVotes[m]=(STATE.profile.mechVotes[m]||0)+1;
     await sset(ELO_KEY,STATE.elo); await sset(PROFILE_KEY,STATE.profile);
+    recordEvent({type:"vote",seedTitle:STATE.seed.title,seedAuthor:STATE.seed.author,
+      mechanismCode:m,candidateTitle:c.title,candidateAuthor:c.author||"",verdict});
     STATE.matchCount++; renderDots();
   }
 
