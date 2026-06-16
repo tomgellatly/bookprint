@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fdfbf4;
+    --paper-2:#fffefb;
+    --cream-edge:#ece6d8;
+    --ink:#33302a;
+    --ink-soft:#665f53;
+    --ink-faint:#a39b8b;
+    /* mechanism colour family — warm, sunny, friendly */
+    --c-rose:#f0664f;     --c-rose-d:#d24428;
+    --c-amber:#f5a623;    --c-amber-d:#dd860c;
+    --c-gold:#f6c544;
+    --c-lime:#8cb83f;     --c-lime-d:#6a972b;
+    --c-teal:#3fae8f;     --c-teal-d:#2a8e73;
+    --c-sky:#48a9c5;      --c-sky-d:#2e87a3;
+    --c-blue:#5b8def;     --c-blue-d:#3f6fd6;
+    --c-violet:#a06ee0;   --c-violet-d:#8250c4;
+    --c-pink:#e86fa6;     --c-pink-d:#cf4d88;
+    --shadow:rgba(110,80,30,0.12);
+    --shadow-d:rgba(110,80,30,0.20);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--paper);color:var(--ink);
+    font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  body{min-height:100vh;min-height:100dvh;display:flex;justify-content:center;
+    background-image:radial-gradient(circle at 14% 8%,rgba(245,166,35,0.12),transparent 42%),
+                     radial-gradient(circle at 88% 14%,rgba(240,102,79,0.09),transparent 38%),
+                     radial-gradient(circle at 84% 88%,rgba(140,184,63,0.11),transparent 46%),
+                     radial-gradient(circle at 10% 92%,rgba(246,197,68,0.10),transparent 42%);
+    background-attachment:fixed;}
+  .serif{font-family:'Fraunces',Georgia,serif;}
+
+  .app{width:100%;max-width:460px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;position:relative;}
+
+  /* ---------- header ---------- */
+  header{padding:18px 22px 12px;display:flex;align-items:center;justify-content:space-between;}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;letter-spacing:-0.02em;}
+  .logo .dot{width:26px;height:26px;border-radius:9px;background:linear-gradient(135deg,var(--c-lime),var(--c-teal));
+    display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px var(--shadow);}
+  .logo .dot svg{width:15px;height:15px;}
+  .logo b{font-weight:800;}
+  .logo .pr{color:var(--c-lime-d);}
+  .hbtn{border:none;background:var(--paper-2);border-radius:50%;width:38px;height:38px;cursor:pointer;
+    box-shadow:0 2px 6px var(--shadow);font-size:15px;color:var(--ink-soft);display:flex;align-items:center;justify-content:center;}
+  .hbtn:hover{color:var(--ink);}
+
+  /* ---------- views ---------- */
+  .view{flex:1;display:none;flex-direction:column;animation:rise .4s cubic-bezier(.2,.8,.2,1);}
+  .view.active{display:flex;}
+  @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  /* ---------- intake ---------- */
+  .intake{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 24px 30px;}
+  .kicker{display:inline-flex;align-items:center;gap:7px;align-self:flex-start;background:var(--paper-2);
+    border-radius:999px;padding:7px 13px;font-size:11px;font-weight:700;color:var(--c-lime-d);
+    box-shadow:0 2px 6px var(--shadow);margin-bottom:18px;}
+  .kicker .pip{width:7px;height:7px;border-radius:50%;background:var(--c-lime);}
+  .intake h1{font-size:30px;line-height:1.14;font-weight:600;letter-spacing:-0.01em;margin-bottom:12px;}
+  .intake h1 .hl{font-style:italic;color:var(--c-teal-d);}
+  .intake .blurb{font-size:14px;line-height:1.6;color:var(--ink-soft);margin-bottom:26px;max-width:36ch;}
+
+  .searchbox{position:relative;}
+  .searchbox input{width:100%;border:none;background:var(--paper-2);border-radius:18px;
+    padding:17px 17px 17px 46px;font-family:inherit;font-size:15px;color:var(--ink);
+    box-shadow:0 3px 12px var(--shadow);outline:none;transition:box-shadow .18s;}
+  .searchbox input:focus{box-shadow:0 0 0 3px rgba(255,180,77,0.4),0 3px 12px var(--shadow);}
+  .searchbox .mag{position:absolute;left:17px;top:50%;transform:translateY(-50%);color:var(--ink-faint);font-size:16px;}
+  .searchbox input::placeholder{color:var(--ink-faint);}
+
+  .results{margin-top:10px;display:none;flex-direction:column;gap:8px;max-height:330px;overflow-y:auto;padding:2px;}
+  .results.show{display:flex;}
+  .rcard{display:flex;gap:13px;background:var(--paper-2);border-radius:16px;padding:10px;cursor:pointer;
+    box-shadow:0 2px 8px var(--shadow);transition:transform .14s,box-shadow .14s;align-items:center;text-align:left;border:none;width:100%;font-family:inherit;}
+  .rcard:hover{transform:translateY(-2px);box-shadow:0 6px 16px var(--shadow-d);}
+  .rcard img{width:42px;height:62px;border-radius:7px;object-fit:cover;background:var(--cream-edge);flex-shrink:0;box-shadow:0 2px 5px var(--shadow);}
+  .rcard .ph{width:42px;height:62px;border-radius:7px;background:linear-gradient(135deg,var(--cream-edge),#ddd4c2);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:18px;}
+  .rcard .rt{font-weight:700;font-size:14px;line-height:1.25;color:var(--ink);}
+  .rcard .ra{font-size:12px;color:var(--ink-soft);margin-top:3px;}
+
+  .seedrow{margin-top:24px;}
+  .seedrow .sl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-faint);margin-bottom:11px;}
+  .seedchips{display:flex;flex-wrap:wrap;gap:8px;}
+  .schip{border:none;background:var(--paper-2);border-radius:999px;padding:9px 14px;font-family:inherit;
+    font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;box-shadow:0 2px 6px var(--shadow);transition:.14s;}
+  .schip:hover{transform:translateY(-2px);color:var(--c-rose-d);box-shadow:0 5px 12px var(--shadow-d);}
+
+  /* ---------- mechanism pick ---------- */
+  .mechpick{flex:1;display:flex;flex-direction:column;padding:18px 24px 28px;}
+  .chosen-book{display:flex;gap:14px;align-items:center;background:var(--paper-2);border-radius:18px;padding:13px;
+    box-shadow:0 3px 12px var(--shadow);margin-bottom:24px;}
+  .chosen-book img{width:50px;height:74px;border-radius:9px;object-fit:cover;box-shadow:0 3px 8px var(--shadow);flex-shrink:0;background:var(--cream-edge);}
+  .chosen-book .cb-ph{width:50px;height:74px;border-radius:9px;background:linear-gradient(135deg,var(--cream-edge),#ddd4c2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .chosen-book .cbt{font-weight:700;font-size:15px;line-height:1.25;}
+  .chosen-book .cba{font-size:12px;color:var(--ink-soft);margin-top:3px;}
+  .chosen-book .change{margin-left:auto;align-self:flex-start;border:none;background:transparent;color:var(--c-rose-d);font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0;}
+
+  .mechpick h2{font-size:23px;line-height:1.25;font-weight:600;margin-bottom:8px;letter-spacing:-0.01em;}
+  .mechpick h2 .mp-inline{font-weight:400;color:var(--ink-soft);font-style:italic;font-size:18px;}
+  .mechpick .mp-sub{font-size:13px;color:var(--ink-soft);margin-bottom:22px;line-height:1.5;}
+  .mechloading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 0;color:var(--ink-soft);}
+  .spinner{width:40px;height:40px;border-radius:50%;border:3px solid var(--cream-edge);border-top-color:var(--c-amber);animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .mechloading .ml-txt{font-size:13px;}
+
+  .mechopts{display:flex;flex-direction:column;gap:11px;}
+  .mopt{border:2px solid transparent;background:var(--paper-2);border-radius:18px;padding:16px 17px;cursor:pointer;
+    box-shadow:0 3px 10px var(--shadow);transition:.15s;text-align:left;font-family:inherit;width:100%;display:flex;gap:13px;align-items:flex-start;}
+  .mopt:hover{transform:translateY(-2px);box-shadow:0 7px 18px var(--shadow-d);}
+  .mopt .swatch{width:14px;height:14px;border-radius:5px;margin-top:3px;flex-shrink:0;}
+  .mopt>span:last-child{flex:1;}
+  .mopt .mo-name{display:block;font-weight:700;font-size:15px;margin-bottom:4px;}
+  .mopt .mo-gloss{display:block;font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
+  .mopt.custom{border:2px dashed var(--cream-edge);background:transparent;box-shadow:none;}
+  .mopt.custom:hover{border-color:var(--c-amber);transform:none;box-shadow:none;}
+  .mopt.custom .mo-name{color:var(--ink-soft);}
+
+  .custom-field{display:none;flex-direction:column;gap:10px;margin-top:4px;}
+  .custom-field.show{display:flex;}
+  .custom-field textarea{width:100%;border:2px solid var(--c-amber);background:var(--paper-2);border-radius:16px;
+    padding:14px;font-family:inherit;font-size:14px;color:var(--ink);outline:none;resize:none;line-height:1.5;box-shadow:0 3px 10px var(--shadow);}
+  .custom-field textarea::placeholder{color:var(--ink-faint);}
+  .custom-field .cf-go{align-self:flex-end;}
+
+  .btn{border:none;border-radius:14px;font-family:inherit;font-weight:700;font-size:14px;padding:14px 22px;cursor:pointer;
+    background:linear-gradient(135deg,var(--c-amber),var(--c-rose));color:#fff;box-shadow:0 4px 14px var(--shadow-d);transition:.13s;}
+  .btn:active{transform:translateY(1px);}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .btn.soft{background:var(--paper-2);color:var(--ink);box-shadow:0 3px 10px var(--shadow);}
+  .btn.full{width:100%;}
+
+  /* ---------- swipe lab ---------- */
+  .lab{flex:1;display:flex;flex-direction:column;padding:14px 24px 22px;}
+  .lab-head{text-align:center;margin-bottom:14px;}
+  .lab-head .lh-pre{font-size:12px;color:var(--ink-soft);margin-bottom:8px;}
+  .lab-head .lh-pre b{color:var(--ink);font-weight:700;}
+  .mech-tag{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 15px;font-weight:700;font-size:13px;color:#fff;box-shadow:0 3px 10px var(--shadow);}
+  .mech-tag .mt-sw{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.85);}
+
+  .dots{display:flex;gap:8px;justify-content:center;margin:14px 0 18px;}
+  .dots .d{width:30px;height:8px;border-radius:999px;background:var(--cream-edge);transition:.3s;}
+  .dots .d.done{background:var(--c-lime);}
+  .dots .d.live{background:var(--c-amber);transform:scaleX(1.1);}
+
+  .q{text-align:center;font-size:15px;font-weight:700;margin-bottom:16px;color:var(--ink);}
+  .q em{font-style:italic;font-family:'Fraunces',serif;color:var(--c-teal-d);}
+
+  .cardstage{flex:1;position:relative;min-height:340px;display:flex;align-items:flex-start;justify-content:center;}
+  .swipecard{position:absolute;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:250px;
+    background:var(--paper-2);border-radius:var(--radius);box-shadow:0 8px 26px var(--shadow-d);overflow:hidden;
+    display:flex;flex-direction:column;cursor:grab;touch-action:pan-y;}
+  .swipecard.leaving-yes{transition:transform .35s cubic-bezier(.4,0,.6,1),opacity .35s;transform:translate(40%,-8%) rotate(12deg);opacity:0;}
+  .swipecard.leaving-no{transition:transform .35s cubic-bezier(.4,0,.6,1),opacity .35s;transform:translate(-140%,-8%) rotate(-12deg);opacity:0;}
+  .swipecard.leaving-skip{transition:transform .35s cubic-bezier(.4,0,.6,1),opacity .35s;transform:translate(-50%,-30%) scale(.9);opacity:0;}
+  .swipecard.entering{animation:cardIn .3s cubic-bezier(.2,.8,.2,1);}
+  @keyframes cardIn{from{transform:translateX(-50%) scale(.92) translateY(10px);opacity:0;}to{transform:translateX(-50%) scale(1) translateY(0);opacity:1;}}
+  .swipecard .cov{aspect-ratio:2/3;max-height:300px;background:var(--cream-edge);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .swipecard .cov img{width:100%;height:100%;object-fit:cover;}
+  .swipecard .cov .noc{font-family:'Fraunces',serif;font-style:italic;font-size:20px;text-align:center;padding:20px;color:var(--ink-soft);line-height:1.3;}
+  .swipecard .vt{padding:13px 15px 15px;text-align:center;}
+  .swipecard .vtt{font-family:'Fraunces',serif;font-weight:600;font-size:17px;line-height:1.22;}
+  .swipecard .vta{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+  .swipecard .vblurb{font-size:11.5px;color:var(--ink-faint);margin-top:7px;line-height:1.4;font-style:italic;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  /* drag verdict stamps */
+  .swipecard .stamp{position:absolute;top:18px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;
+    padding:7px 12px;border-radius:10px;border:2.5px solid;opacity:0;transition:opacity .1s;pointer-events:none;}
+  .swipecard .stamp.yes{right:16px;color:var(--c-lime-d);border-color:var(--c-lime-d);transform:rotate(12deg);}
+  .swipecard .stamp.no{left:16px;color:var(--c-rose-d);border-color:var(--c-rose-d);transform:rotate(-12deg);}
+  .swipecard.show-yes .stamp.yes{opacity:1;}
+  .swipecard.show-no .stamp.no{opacity:1;}
+  .deck-hint{position:absolute;top:14px;left:50%;transform:translateX(-50%) translateY(-6px) scale(.96);width:100%;max-width:250px;height:120px;
+    background:var(--paper-2);border-radius:var(--radius);box-shadow:0 4px 14px var(--shadow);z-index:-1;opacity:.5;}
+
+  .swipe-actions{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px;}
+  .sa{border:none;cursor:pointer;font-family:inherit;background:var(--paper-2);display:flex;flex-direction:column;align-items:center;gap:5px;
+    box-shadow:0 4px 14px var(--shadow);transition:.14s;}
+  .sa-icon{display:flex;align-items:center;justify-content:center;font-weight:800;border-radius:50%;}
+  .sa-no .sa-icon,.sa-yes .sa-icon{width:60px;height:60px;font-size:24px;}
+  .sa-skip .sa-icon{width:46px;height:46px;font-size:18px;}
+  .sa{border-radius:18px;padding:10px 6px 9px;width:88px;}
+  .sa-skip{width:74px;}
+  .sa-lbl{font-size:11px;font-weight:700;color:var(--ink-soft);line-height:1.1;}
+  .sa-no .sa-icon{background:rgba(240,102,79,0.14);color:var(--c-rose-d);}
+  .sa-yes .sa-icon{background:rgba(140,184,63,0.18);color:var(--c-lime-d);}
+  .sa-skip .sa-icon{background:var(--cream-edge);color:var(--ink-soft);}
+  .sa:hover{transform:translateY(-3px);box-shadow:0 8px 20px var(--shadow-d);}
+  .sa-no:hover .sa-icon{background:var(--c-rose);color:#fff;}
+  .sa-yes:hover .sa-icon{background:var(--c-lime);color:#fff;}
+  .sa:active{transform:translateY(-1px) scale(.97);}
+
+  .resultslink{display:block;margin:16px auto 0;border:none;background:transparent;color:var(--c-teal-d);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:4px;}
+  .resultslink:hover{text-decoration:underline;}
+
+  /* ---------- dispensary (placeholder reward) ---------- */
+  .disp{flex:1;display:flex;flex-direction:column;padding:20px 24px 28px;overflow-y:auto;}
+  .disp h2{font-size:25px;font-weight:600;letter-spacing:-0.01em;margin-bottom:4px;}
+  .disp h2 .hl{font-style:italic;color:var(--c-teal-d);}
+  .disp .dsub{font-size:13px;color:var(--ink-soft);line-height:1.55;margin-bottom:20px;}
+  .winner{background:var(--paper-2);border-radius:var(--radius);padding:18px;box-shadow:0 5px 18px var(--shadow);margin-bottom:16px;position:relative;overflow:hidden;}
+  .winner::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--c-teal),var(--c-lime));}
+  .winner .wlbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--c-teal-d);margin-bottom:12px;}
+  .winrow{display:flex;gap:13px;align-items:center;padding:9px 0;border-bottom:1px solid var(--cream-edge);}
+  .winrow:last-child{border-bottom:none;}
+  .winrow img{width:40px;height:60px;border-radius:7px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 6px var(--shadow);background:var(--cream-edge);}
+  .winrow .wn-ph{width:40px;height:60px;border-radius:7px;background:linear-gradient(135deg,var(--cream-edge),#ddd4c2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .winrow .wnt{font-family:'Fraunces',serif;font-weight:600;font-size:14px;line-height:1.2;}
+  .winrow .wna{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+  .winrow .wne{margin-left:auto;font-size:11px;font-weight:700;color:var(--c-teal-d);background:rgba(92,199,184,0.16);padding:5px 9px;border-radius:999px;flex-shrink:0;}
+
+  .dispcta{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+    border:1.5px solid var(--cta-c,var(--cream-edge));border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;
+    background:color-mix(in srgb, var(--cta-c,#fff) 10%, #fff);box-shadow:0 4px 14px var(--shadow);font-family:inherit;transition:.15s;position:relative;}
+  .dispcta:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--shadow-d);}
+  .dispcta .cta-eyebrow{position:absolute;top:-9px;left:16px;background:var(--cta-cd,var(--ink));color:#fff;
+    font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;padding:3px 9px;border-radius:999px;}
+  .dispcta .cta-main{flex:1;font-size:14.5px;font-weight:700;line-height:1.35;color:var(--ink);}
+  .dispcta .cta-main em{font-style:italic;color:var(--cta-cd,var(--ink-soft));font-family:'Fraunces',serif;font-weight:600;}
+  .dispcta .cta-arrow{font-size:20px;font-weight:700;color:var(--cta-cd,var(--ink-soft));flex-shrink:0;}
+
+  .disp-actions{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+
+  .dispensary-note{font-size:12px;color:var(--ink-faint);text-align:center;line-height:1.5;margin-top:14px;}
+
+  footer{text-align:center;padding:14px;font-size:11px;color:var(--ink-faint);}
+  footer b{color:var(--ink-soft);}
+
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--paper-2);
+    padding:12px 22px;border-radius:999px;font-size:12px;font-weight:700;opacity:0;pointer-events:none;transition:.3s;z-index:80;box-shadow:0 6px 20px var(--shadow-d);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .err{background:#ffe9e4;color:#c0432b;border-radius:14px;padding:13px 15px;font-size:13px;line-height:1.5;margin-bottom:16px;font-weight:600;}
+
+  ::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-thumb{background:var(--cream-edge);border-radius:8px;}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">
+      <span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h11a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2z"/><path d="M9 7.5c1.5-1 3-1 3 1.5s-1.5 2-1.5 4"/><circle cx="10.4" cy="15.5" r="0.6" fill="#fff"/></svg></span>
+      <span>Book<b class="pr">print</b></span>
+    </div>
+    <button class="hbtn" id="homeBtn" title="Start over">⌂</button>
+  </header>
+
+  <!-- INTAKE -->
+  <section class="view active" id="view-intake">
+    <div class="intake">
+      <div class="kicker"><span class="pip"></span> Find your next obsession</div>
+      <h1 class="serif">Most book apps show you titles that look alike. None of them tell you <span class="hl">why</span> one clicked.</h1>
+      <p class="blurb">Bookprint goes deeper than "popular in your genre." We help you work out exactly what your favourite books did to you - the specific itch each one scratched - then find you more of that. Pick one you loved, and let's figure out why.</p>
+      <div class="searchbox">
+        <span class="mag">⌕</span>
+        <input id="search" type="text" placeholder="Search a title or author…" autocomplete="off">
+      </div>
+      <div class="results" id="results"></div>
+      <div class="seedrow" id="seedrow">
+        <div class="sl">Try one of these</div>
+        <div class="seedchips" id="seedchips"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MECHANISM PICK -->
+  <section class="view" id="view-mech">
+    <div class="mechpick">
+      <div class="chosen-book" id="chosenBook"></div>
+      <div id="mechBody">
+        <div class="mechloading">
+          <div class="spinner"></div>
+          <div class="ml-txt" id="mlTxt">Working out what makes this one special…</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SWIPE LAB -->
+  <section class="view" id="view-lab">
+    <div class="lab">
+      <div class="lab-head">
+        <div class="lh-pre">You loved <b id="seedName">—</b> for…</div>
+        <span class="mech-tag" id="mechTag"><span class="mt-sw"></span><span id="mechTagName">—</span></span>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div class="q" id="swipeQ">Does this one scratch the same itch?</div>
+      <div class="cardstage" id="cardstage"></div>
+      <div class="swipe-actions" id="swipeActions">
+        <button class="sa sa-no" id="voteNo" title="Wrong vibe">
+          <span class="sa-icon">✕</span><span class="sa-lbl">Wrong vibe</span>
+        </button>
+        <button class="sa sa-skip" id="voteSkip" title="Haven't read it">
+          <span class="sa-icon">↻</span><span class="sa-lbl">Haven't read it</span>
+        </button>
+        <button class="sa sa-yes" id="voteYes" title="That fits">
+          <span class="sa-icon">✓</span><span class="sa-lbl">That fits</span>
+        </button>
+      </div>
+      <button class="resultslink" id="finishEarly">See my results →</button>
+    </div>
+  </section>
+
+  <!-- DISPENSARY -->
+  <section class="view" id="view-disp">
+    <div class="disp">
+      <h2 class="serif">Your <span class="hl">matches</span></h2>
+      <p class="dsub" id="dispSub">Here's what to read next.</p>
+      <div class="winner" id="winnerBox"></div>
+      <button class="dispcta" id="dispCta"></button>
+      <div class="disp-actions">
+        <button class="btn full" id="shareDisp">Share my matches</button>
+        <button class="btn soft full" id="anotherBook">Match another book</button>
+      </div>
+      <p class="dispensary-note">Every vote you cast trains the engine. The full web of connections - the Dispensary - opens once the community has voted enough.</p>
+    </div>
+  </section>
+
+  <footer>Bookprint · <b>community beta</b> · seeded with 430 books</footer>
+</div>
+<div class="toast" id="toast">Copied</div>
+
+<script>const SEED_LIBRARY=[["Anvil of Stars", "Greg Bear"], ["Darwin's Radio", "Greg Bear"], ["The Forge of God", "Greg Bear"], ["Transcription", "Ben Lerner"], ["Blood Music", "Greg Bear"], ["The Light Of Other Days", "Arthur C Clarke & Stephen Baxter"], ["The Kaiju Preservation Society", "John Scalzi"], ["The Man Who Saw Seconds", "Alexander Boldizar"], ["Great Circle", "Maggie Shipstead"], ["Hooked", "Asako Yuzuki"], ["The Explorer", "James Smythe"], ["Strange Buildings", "Uketsu"], ["The Divine Farce", "Michael Graziano"], ["The Future", "Naomi Alderman"], ["Martyr!", "Kaveh Akbar"], ["Trust Exercise", "Susan Choi"], ["London and the South East", "David Szalay"], ["Flashlight", "Susan Choi"], ["The Special One: The Secret World of Jose Mourinho", "Diego Torres"], ["All That Man Is", "David Szalay"], ["Turbulence", "David Szalay"], ["Flesh", "David Szalay"], ["In The Distance", "Hernan Diaz"], ["Version Control", "Dexter Palmer"], ["The Trees", "Percival Everett"], ["The Wall", "John Lanchester"], ["Enlightenment", "Sarah Perry"], ["The Raw Shark Texts", "Steven Hall"], ["The Tally Stick", "Carl Nixon"], ["When the Museum is Closed", "Emi Yagi"], ["The Book Of Strange New Things", "Michael Faber"], ["Dark Matter", "Michelle Paver"], ["The Cartographers", "Peng Shepherd"], ["The Lightness", "Emily Temple"], ["Writers & Lovers", "Lily King"], ["The Wanderers", "Meg Howrey"], ["All This Could Be Different", "Sarah Thankam Mathews"], ["Free Food For Millionaires", "Min Jin Lee"], ["Long Island Compromise", "Taffy Brodesser-Akner"], ["The Topeka School", "Ben Lerner"], ["Fleishman Is In Trouble", "Taffy Brodesser-Akner"], ["Dream State", "Eric Puchner"], ["Luminous", "Greg Egan"], ["Stories of Your Life and Others", "Ted Chiang"], ["Axiomatic", "Greg Egan"], ["The Sidekick", "Benjamin Markovitz"], ["The Rachel Incident", "Caroline O'Donoghue"], ["Diaspora", "Greg Egan"], ["Distress", "Greg Egan"], ["Singer Distance", "Ethan Chatagnier"], ["Permutation City", "Greg Egan"], ["Quarantine", "Greg Egan"], ["Light From Other Stars", "Erika Swyler"], ["The Harvest", "Robert Charles Wilson"], ["Mysterium", "Robert Charles Wilson"], ["The Premonition", "Banana Yoshimoto"], ["XX", "Rian Hughes"], ["Comfort Me With Apples", "Catherynne M. Valente"], ["Sharp Objects", "Gillian Flynn"], ["Strange Pictures", "Uketsu"], ["Foe", "Iain Reid"], ["We Spread", "Iain Reid"], ["Gnomon", "Nick Harkaway"], ["The Vegeterian", "Han Kang"], ["The Mars House", "Natasha Pulley"], ["Prophet", "Helen MacDonald & Sin Blache"], ["Absolution", "Jeff Vandermeer"], ["Days at the Morisaki Bookshop", "Satoshi Yagisawa"], ["The Power", "Naomi Alderman"], ["Piranesi", "Susanna Clarke"], ["The Underground Railroad", "Colson Whitehead"], ["Butter", "Asako Yuzuki"], ["The City of Mirrors", "Justin Cronin"], ["There Is No Antimemetics Divison", "qntm"], ["The Wager", "David Grann"], ["The Silent Patient", "Alex Michaelides"], ["The Library at Mount Char", "Scott Hawkin"], ["Yellowface", "R F Kuang"], ["Death At The Sign of the Rook", "Kate Atkinson"], ["Same As It Ever Was", "Claire Lombardo"], ["I Who Have Never Known Men", "Jacqueline Harpman"], ["The Andromeda Strain", "Michael Crichton"], ["Our Wives Under The Sea", "Julia Armfield"], ["North American Lake Monsters", "Nathan Ballingrud"], ["The Last House on Needless Street", "Catriona Ward"], ["The Twelve", "Justin Cronin"], ["The Passage", "Justin Cronin"], ["The Plot", "Jean Hanff Korelitz"], ["The Latecomer", "Jean Hanff Korelitz"], ["Big Swiss", "Jen Beagin"], ["The Nix", "Nathan Hill"], ["The Bee Sting", "Paul Murray"], ["Penance", "Eliza Clark"], ["Wool", "Hugh Howey"], ["The Ferryman", "Justin Cronin"], ["The Gone World", "Tom Sweterlitsch"], ["The Sphere", "Michael Crichton"], ["The Mountain In The Sea", "Ray Nayler"], ["Remainder", "Tom McCarthy"], ["Gathering Evidence", "Martin MacInnes"], ["Infinite Ground", "Martin MacInnes"], ["The Object", "Joshua T Calvert"], ["In Ascension", "Martin MacInnes"], ["Pines", "Blake Crouch"], ["Time Shelter", "Grigor Gaspodinov"], ["The City and The City", "China Mieville"], ["Tom Lake", "Ann Patchett"], ["Orbital", "Samantha Harvey"], ["The Anomaly", "Herve Le Tellier"], ["Metronome", "Tom Watson"], ["The Seven Deaths of Evelyn Hardcastle", "Stuart Turton"], ["Eversion", "Alastair Reynolds"], ["The Invention of Morel", "Adolfo Bioy Casares"], ["To Be Taught, If Fortunate", "Becky Chambers"], ["Exhalation", "Ted Chiang"], ["Acceptance", "Jeff Vandermeer"], ["A Weekend In New York", "Benjamin Markovitz"], ["Authority", "Jeff Vandermeer"], ["Carrie Soto Is Back", "Taylor Jenkins Reid"], ["Annihilation", "Jeff Vandermeer"], ["American Pastoral", "Philip Roth"], ["Children of Ruin", "Adrian Tchaicovsky"], ["Children of Time", "Adrian Tchaicovsky"], ["Dark Matter", "Blake Crouch"], ["Run", "Ann Patchett"], ["The Truth About the Harry Quebert Affair", "Joel Dicker"], ["Project Hail Mary", "Andy Weir"], ["Silver Sparrow", "Tayari Jones"], ["Pachinko", "Min Jin Lee"], ["Tomorrow, and Tomorrow, and Tomorrow", "Gabrielle Zevin"], ["The Interestings", "Meg Wolitzer"], ["Ball Lightning", "Cixin Liu"], ["Blindsight", "Peter Watts"], ["Death's End", "Cixin Liu"], ["The Dark Forest", "Cixin Liu"], ["The Three Body Problem", "Cixin Liu"], ["Chindi", "Jack McDevitt"], ["Manhattan Beach", "Jennifer Egan"], ["The Annals of the Heechee", "Frederik Pohl"], ["Childhood's End", "Arthur C Clarke"], ["Tau Zero", "Poul Anderson"], ["Heechee Rendezvous", "Frederik Pohl"], ["Spin", "Robert Charles Wilson"], ["How High We Go In The Dark", "Sequoia Nagamatsu"], ["The Chronoliths", "Robert Charles Wilson"], ["Beyond The Blue Event Horizon", "Frederik Pohl"], ["The Invisible Circus", "Jennifer Egan"], ["Sleeping Giants", "Sylvain Neuvel"], ["Blind Lake", "Robert Charles Wilson"], ["The Mote In God's Eye", "Larry Niven and Jerry Pournelle"], ["Gateway", "Frederik Pohl"], ["Magpie", "Elizabeth Day"], ["Rendezvous with Rama", "Arthur C Clarke"], ["Even The Dogs", "Jon McGregor"], ["Behind The Scenes At The Museum", "Kate Atkinson"], ["Trio", "William Boyd"], ["The Hercules Text", "Jack McDevitt"], ["Reservoir 13", "Jon McGregor"], ["Where The Crawdads Sing", "Delia Owens"], ["The Herd", "Emily Edwards"], ["Last Summer in the City", "Gianfranco Calligarich"], ["Lean Fall Stand", "Jon McGregor"], ["Crow Lake", "Mary Lawson"], ["Transcription", "Kate Atkinson"], ["The Financial Lives of the Poets", "Jess Walter"], ["Road Ends", "Mary Lawson"], ["Imagine Me Gone", "Adam Haslett"], ["7 1/2", "Christos Tsiolkas"], ["The Other Side of the Bridge", "Mary Lawson"], ["All Our Wrong Todays", "Elan Mastai"], ["No One Is Talking About This", "Patricia Lockwood"], ["A Town Called Solace", "Mary Lawson"], ["Cloud Atlas", "David Mitchell"], ["The Candy House", "Jennifer Egan"], ["Touch", "Claire North"], ["Sea of Tranquility", "Emily St John Mandel"], ["The First Fifteen Lives of Harry August", "Claire North"], ["French Braid", "Anne Tyler"], ["Snowflake", "Louise Nealon"], ["11.22.63", "Stephen King"], ["Billy Summers", "Stephen King"], ["Big Sky", "Kate Atkinson"], ["Started Early, Took My Dog", "Kate Atkinson"], ["When Will There Be Good News?", "Kate Atkinson"], ["One Good Turn", "Kate Atkinson"], ["Case Histories", "Kate Atkinson"], ["The Promise", "Damon Galgut"], ["This Is How You Lose The Time War", "Amal El-Mohtar and Max Gladstone"], ["Piranesi", "Susanne Clarke"], ["A Gentleman in Moscow", "Amor Towles"], ["The Accidental Tourist", "Anne Tyler"], ["Americanah", "Chimamanda Ngozi Adiche"], ["Wonder Boys", "Michael Chabon"], ["A God In Ruins", "Kate Atkinson"], ["Little Fires Everywhere", "Celeste NG"], ["Life After Life", "Kate Atkinson"], ["The Glass Hotel", "Emily St John Mandel"], ["Crossroads", "Jonathan Franzen"], ["Earthly Possessions", "Anne Tyler"], ["The Hotel New Hampshire", "John Irving"], ["American Dirt", "Jeanine Cummins"], ["The Cider House Rules", "John Irving"], ["Disgrace", "J.M Coetzee"], ["On Chesil Beach", "Ian McEwan"], ["Slow Man", "J.M Coetzee"], ["Telegraph Avenue", "Michael Chabon"], ["Freedom", "Jonathan Franzen"], ["Life and Times of Michael K", "J.M Coetzee"], ["The Listeners", "James Gunn"], ["Contact", "Carl Sagan"], ["The Psychopath Test", "John Ronson"], ["So You’ve Been Publicly Shamed", "John Ronson"], ["A Visit From The Goon Squad", "Jennifer Egan"], ["The Most Fun We Ever Had", "Claire Lombardo"], ["Machines Like Me", "Ian McEwan"], ["Hey Nostradamus!", "Douglas Coupland"], ["A Weekend In New York", "Benjamin Markovits"], ["Middlemarch", "George Eliot"], ["Madonna In A Fur Coat", "Sabahattin Ali"], ["You Don’t Have To Live Like This", "Benjamin Markovits"], ["We Are All Completely Beside Ourselves", "Karen Joy Fowler"], ["The Dutch House", "Ann Patchett"], ["Commonwealth", "Ann Patchett"], ["Girl, Woman, Other", "Bernardine Evaristo"], ["The Singer’s Gun", "Emily St John Mandel"], ["An American Marriage", "Tayari Jones"], ["The Outsider", "Stephen King"], ["Barracuda", "Christos Tsiolkas"], ["The Only Story", "Julian Barnes"], ["Jesus Man", "Christos Tsiolkas"], ["The Slap", "Christos Tsiolkas"], ["Testimony", "Anita Shreve"], ["Amsterdam", "Ian McEwan"], ["End of Watch", "Stephen King"], ["Finders Keepers", "Stephen King"], ["Mr Mercedes", "Stephen King"], ["The Circle", "Dave Eggers"], ["The Lathe of Heaven", "Ursula Le Guin"], ["The Lola Quartet", "Emily St John Mandel"], ["Solar", "Ian McEwan"], ["Station Eleven", "Emily St John Mandel"], ["A Patchwork Planet", "Anne Tyler"], ["All Our Wrong Todays", "Elan Mustai"], ["On Beauty", "Zadie Smith"], ["Player One", "Douglas Coupland"], ["NW", "Zadie Smith"], ["Notes on a Nervous Planet", "Matt Haig"], ["The Buddha of Suburbia", "Hanif Kureishi"], ["The Corrections", "Jonathan Franzen"], ["Eleanor Oliphant Is Completely Fine", "Gail Honeyman"], ["The Treatment", "Daniel Menaker"], ["Paradise News", "David Lodge"], ["A Man Called Ove", "Fredrik Backman"], ["Norwegian Wood", "Haruki Murakami"], ["The World According to Garp", "John Irving"], ["The Marriage Plot", "Jeffrey Euginedes"], ["Henderson, the Rain King", "Saul Bellow"], ["The Nakano Thrift Shop", "Hiromi Kawakami"], ["Moonlight Shadow", "Banana Yoshimoto"], ["Kitchen", "Banana Yoshimoto"], ["Behold the Dreamers", "Imbolo Mbue"], ["Strange Weather in Tokyo", "Hiromi Kawakami"], ["Not Working", "Lisa Owens"], ["Vinegar Girl", "Anne Tyler"], ["Hey Nostradamus", "Douglas Coupland"], ["To Rise Again At A Decent Hour", "Joshua Ferris"], ["Exit Ghost", "Philip Roth"], ["The Counterlife", "Philip Roth"], ["The Prague Orgy", "Philip Roth"], ["The Anatomy Lesson", "Philip Roth"], ["Zuckerman Unbound", "Philip Roth"], ["The Ghost Writer", "Philip Roth"], ["I Married A Communist", "Philip Roth"], ["The Human Stain", "Philip Roth"], ["What I Talk About When I Talk About Running", "Haruki Murakami"], ["If Morning Ever Comes", "Anne Tyler"], ["American Pastoral", "Philip Roth"], ["Breathing Lessons", "Anne Tyler"], ["A Slipping Down Life", "Anne Tyler"], ["Reasons To Stay Alive", "Matt Haig"], ["Metroland", "Julian Barnes"], ["Saint Maybe", "Anne Tyler"], ["The Beginner’s Goodbye", "Anne Tyler"], ["A Spool of Blue Thread", "Anne Tyler"], ["Therapy", "David Lodge"], ["The Accidental Tourist", "Anne Tyler"], ["The British Museum is Falling Down", "David Lodge"], ["Ladder of Years", "Anne Tyler"], ["Deaf Sentence", "David Lodge"], ["The Hours", "Michael Cunningham"], ["Freedom", "Jonathan Franzen"], ["Eleanor Rigby", "Douglas Coupland"], ["jPod", "Douglas Coupland"], ["The Gum Thief", "Douglas Coupland"], ["Shampoo Planet", "Douglas Coupland"], ["The Noise of Time", "Julian Barnes"], ["Then We Came To The End", "Joshua Ferris"], ["Purity", "Jonathan Franzen"], ["The Pale King", "David Foster Wallace"], ["Herzog", "Saul Bellow"], ["Glass", "Alex Christofi"], ["The Electric Kool", "Tom Wolfe"], ["Jasmine", "Bharati Mukherjee"], ["Open City", "Teju Cole"], ["The Right Stuff", "Tom Wolfe"], ["Modernism, Feminism & The Culture of Boredom", "Allison Pease"], ["Spring & All", "William Carlos Williams"], ["Howards End", "E.M Forster"], ["The Waves", "Virginia Woolf"], ["Savage Coast", "Muriel Rukeyser"], ["Passing", "Nella Larsen"], ["To Rise Again at a Decent Hour – Joshua Ferris", "Joshua Ferris"], ["A Supposedly Fun Thing I’ll Never Do Again – David Foster Wallace", "David Foster Wallace"], ["Hey Nostradamus! – Douglas Coupland", "Douglas Coupland"], ["Worst. Person. Ever. – Douglas Coupland", "Douglas Coupland"], ["A Heartbreaking Work of Staggering Genius – Dave Eggers", "Dave Eggers"], ["The Treatment – Daniel Menaker", "Daniel Menaker"], ["Girlfriend in a Coma – Douglas Coupland", "Douglas Coupland"], ["Franny & Zooey – J.D Salinger", "JD Salinger"], ["Incognito – David Eagleman", "David Eagleman"], ["Macbeth – William Shakespeare", "William Shakespeare"], ["If Nobody Speaks of Remarkable Things – Jon McGregor", "Jon McGregor"], ["The Mill on the Floss – George Eliot", "George Eliot"], ["The Hottest State – Ethan Hawke", "Ethan Hakwe"], ["Thinks…", "David Lodge"], ["Copenhagen", "Michael Frayn"], ["White Teeth – Zadie Smith", "Zadie Smith"], ["Who’s Afraid of Virginia Woolf? – Edward Albee", "Edward Albee"], ["Last Night at the Lobster", "Stewart O'Nan"], ["Dinner at the Homesick Restaurant – Anne Tyler", "Anne Tyler"], ["Arcadia – Tom Stoppard", "Tom Stoppard"], ["Saturday – Ian McEwan", "Ian McEwan"], ["Cat’s Cradle – Kurt Vonnegut", "Kurt Vonnegut"], ["Norwegian By Night – Derek B. Miller", "Derek B Miller"], ["Metroland – Julian Barnes", "Julian Barnes"], ["The Art of Fielding – Char Harbach", "Chad Harbach"], ["A Widow for One Year – John Irving", "John Irving"], ["The World According to Garp – John Irving", "John Irving"], ["The Marriage Plot – Jeffrey Eugenides", "Jeffrey Eugenides"], ["The Sun Also Rises – Ernest Hemingway", "Ernest Hemingway"], ["My Mistresses’ Sparrow is Dead & Other Stories – Jeffrey Eugenides", "Jeffrey Eugenides"], ["Libra – Don DeLillo", "Don DeLillo"], ["Trout Fishing in America – Richard Brautigan", "Richard Brautigan"], ["11.22.63 – Stephen King", "Stephen King"], ["Joyland – Stephen King", "Stephen King"], ["Player One – Douglas Coupland", "Douglas Coupland"], ["For Esme With Love & Squalor, and Other Stories – J.D Salinger", "JD Salinger"], ["Generation A – Douglas Coupland", "Douglas Coupland"], ["What We Talk About When We Talk About Love – Raymond Carver", "Raymond Carver"], ["Life After God – Douglas Coupland", "Douglas Coupland"], ["Generation X – Douglas Coupland", "Douglas Coupland"], ["The Art of Fielding – Chad Harbach", "Chad Harbach"], ["Oracle Night – Paul Auster", "Paul Auster"], ["The Fault in Our Stars – John Green", "John Green"], ["Girlfriend In a Coma – Douglas Coupland", "Douglas Coupland"], ["Siddharta – Herman Hesse", "Herman Hesse"], ["Middlesex – Jeffrey Eugenides", "Jeffrey Eugenides"], ["Freedom – Jonathan Franzen", "Jonathan Franzen"], ["The Penguin Book of Modern Short Stories – Malcolm Bradbury", "Malcom Bradbury"], ["Top Girls – Caryl Churchill", "Caryl Churchill"], ["Angels in America – Tony Kushner", "Tony Kushner"], ["The Caretaker – Harold Pinter", "Harold Pinter"], ["Oedipus Rex – Sophocles", "Sophocles"], ["The Awakening – Kate Chopin", "Kate Chopin"], ["Frankenstein – Mary Shelley", "Mary Shelley"], ["Within A Budding Grove", "Marcel Proust"], ["Raise High the Roof Beam, Carpenters & Seymour – An Introduction – J.D. Salinger", "JD Salinger"], ["Franny & Zooey – J.D. Salinger", "JD Salinger"], ["Silas Marner – George Eliot", "George Eliot"], ["The Corrections – Jonathan Franzen", "Jonathan Franzen"], ["The Marriage Plot – Jeffrey Eugenides", "Jeffrey Eugenides"], ["Middlemarch – George Eliot", "George Eliot"], ["Othello – William Shakespeare", "William Shakespeare"], ["Pafko At The Wall – Don DeLillo", "Don DeLillo"], ["Point Omega – Don DeLillo", "Don DeLillo"], ["Under The Volcano – Malcolm Lowry", "Malcolm Lowry"], ["To The Lighthouse – Virginia Woolf", "Virginia Woolf"], ["The New York Trilogy – Paul Auster", "Paul Auster"], ["Portnoy’s Complaint – Philip Roth", "Philip Roth"], ["Infinite Jest – David Foster Wallace", "David Foster Wallace"], ["The Catcher In The Rye – J.D Salinger", "JD Salinger"], ["The Perks of Being a Wallflower – Stephen Chbonsky", "Stephen Chbonsky"], ["A Confession – Leo Tolstoy", "Leo Tolstoy"], ["Metroland – Julian Barnes", "Julian Barnes"], ["What Happens in Hamlet – John Dover Wilson", "John Dover Wilson"], ["Pale Fire", "Vladimir Nabokov"], ["The Sense of an Ending – Julian Barnes", "Julian Barnes"], ["Swann’s Way – Marcel Proust", "Marcel Proust"], ["The Secret Agent – Joseph Conrad", "Joseph Conrad"], ["The Tempest", "William Shakespeare"], ["Macbeth", "William Shakespeare"], ["King Lear", "William Shakespeare"], ["Hamlet – William Shakespeare", "William Shakespeare"], ["Don Quixote – Miguel de Cervantes Saavedra", "Miguel De Cervantes"], ["The Sound and the Fury – William Faulkner", "William Faulkner'"], ["Madame Bovary – Gustave Flaubert", "Gustave Flaubert"], ["The Consolation of Philosophy – Boethius", "Boethius"], ["The Brothers Karamazov – Fyodor Dostoevsky", "Fyodor Dostoevsky"], ["Candide – Voltaire", "Voltaire"], ["The Old Man and the Sea – Ernest Hemingway", "Ernest Hemingway"], ["Ulysses – James Joyce", "James Joyce"], ["Metamorphosis – Frank Kafka", "Franz Kafka"], ["Mrs Dalloway – Virginia Woolf", "Virginia Woolf"], ["The Death of Ivan Ilyich – Leo Tolstoy", "Leo Tolstoy"], ["Notes from Underground – Fyodor Dostoevsky", "Fyodor Dostoevsky"], ["Lolita – Vladimir Nabokov", "Vladimir Nabokov"], ["The Road – Cormac McCarthy", "Cormac McCarthy"], ["Anna Karenina – Leo Tolstoy", "Leo Tolstoy"], ["Dubliners – James Joyce", "James Joyce"], ["The Outsider – Albert Camus", "Albert Camus"], ["Crime & Punishment – Fyodor Dostoevsky", "Fyodor Dostoevsky"], ["One Hundred Years of Solitude – Gabriel Garcia Marquez", "Gabriel Garcia Marquez"], ["The Great Gatsby – F. Scott Fitzgerald", "F Scott Fitzgerald"], ["Waiting for Godot – Samuel Beckett", "Samuel Beckett"], ["A Portrait of the Artist as a Young Man – James Joyce", "James Joyce"], ["The Castle – Franz Kafka", "Frank Kafka"], ["Heart of Darkness – Joseph Conrad", "Joseph Conard"], ["Paradise Lost – John Milton", "John Milton"], ["Pride and Prejudice – Jane Austen", "Jane Austen"], ["White Noise – Don DeLillo", "Don DeLillo"], ["Knowledge of Angels – Jill Paton Walsh", "Jill Paton Walsh"], ["IT", "Stephen King"], ["The Stand", "Stephen King"], ["Cell", "Stephen King"], ["Bag of Bones", "Stephen King"], ["The Shining", "Stephen King"], ["The Dead Zone", "Stephen King"], ["The Dark Tower: The Gunslinger", "Stephen King"], ["Lisey's Story", "Stephen King"], ["Duma Key", "Stephen King"]];</script>
+<script>// ============================================================================
+// BOOKPRINT — app logic
+// SEED_LIBRARY (430 [title,author] pairs) is injected by seed_inline.js
+// ============================================================================
+
+// ---- CONFIG -----------------------------------------------------------------
+// Paste a free Google Books API key here for reliable group testing.
+// Get one at: https://console.cloud.google.com → enable "Books API" → create key.
+// Leaving it blank still works (unkeyed), but may rate-limit with many testers.
+const GOOGLE_BOOKS_KEY = ""; // Set your Google Books API key here (see deployment notes below)
+const MODEL = "claude-sonnet-4-6";
+const MATCHES_PER_ROUND = 5;
+
+// ---- MECHANISM TAXONOMY -----------------------------------------------------
+// Controlled vocabulary. The API classifies INTO this; it never invents labels.
+// Each carries a colour so the whole app shares one visual language.
+const COLORS = ["rose","amber","lime","teal","sky","blue","violet","pink"];
+const TAXONOMY = [
+  {code:"UNRELIABLE_NARRATION", label:"An unreliable narrator", gloss:"the ground keeps shifting under what you're told"},
+  {code:"SLOW_DREAD", label:"Slow-building dread", gloss:"unease that tightens by degrees, never by jump-scares"},
+  {code:"COMPULSIVE_CARTOGRAPHY", label:"Mapping a strange world", gloss:"the joy of a mind charting somewhere unknown, inch by inch"},
+  {code:"VOICE_AS_ENGINE", label:"An irresistible voice", gloss:"you'd follow this narrator describing paint drying"},
+  {code:"PUZZLEBOX_STRUCTURE", label:"A puzzle-box structure", gloss:"the shape of the telling is itself the mystery"},
+  {code:"COMPETENCE_PORN", label:"Brilliance under pressure", gloss:"watching someone clever solve a hard problem in real time"},
+  {code:"INTIMATE_DOMESTIC", label:"Big feeling, small rooms", gloss:"enormous emotion inside ordinary domestic life"},
+  {code:"BIG_IDEA_VERTIGO", label:"A mind-expanding idea", gloss:"a concept so large it rearranges how you see things"},
+  {code:"MORAL_GREYZONE", label:"No clean side to take", gloss:"morally tangled, and the book knows it"},
+  {code:"LYRIC_PROSE", label:"Gorgeous sentences", gloss:"you reread lines just for the sound of them"},
+  {code:"FOUND_FAMILY", label:"Found-family warmth", gloss:"strangers becoming a 'we' you ache to belong to"},
+  {code:"REVENGE_MACHINE", label:"An inexorable plan", gloss:"a scheme clicking toward its target like a trap"},
+  {code:"ALIEN_PERSPECTIVE", label:"A truly alien mind", gloss:"a perspective that does not think the way you do"},
+  {code:"NESTED_TIMELINES", label:"Braided timelines", gloss:"separate threads you slowly realise are one"},
+  {code:"QUIET_DEVASTATION", label:"Quiet devastation", gloss:"the gut-punch lands harder for being understated"},
+  {code:"SYSTEM_AS_VILLAIN", label:"The system is the villain", gloss:"no bad guy - just a machine of incentives grinding people down"},
+  {code:"OBSESSIVE_DETAIL", label:"Deep procedural detail", gloss:"craft-pleasure in exactly how a thing works"},
+  {code:"DREAM_LOGIC", label:"Dream / fable logic", gloss:"events that cohere emotionally, not causally"},
+  {code:"WITHHELD_INFO", label:"A book in no hurry", gloss:"it knows something and makes you wait for it"},
+  {code:"BANTER_DRIVEN", label:"Crackling dialogue", gloss:"you'd read these people argue about anything"},
+  {code:"COSMIC_SCALE", label:"Cosmic scale & deep time", gloss:"human stories dwarfed by vast time or space"},
+  {code:"BODY_HORROR", label:"Dread in the body", gloss:"unease located in flesh and transformation"},
+  {code:"PUZZLE_OF_GRIEF", label:"Grief, worked sideways", gloss:"loss processed through structure and indirection"},
+  {code:"RELUCTANT_BOND", label:"An unlikely closeness", gloss:"two people who shouldn't click, slowly clicking"},
+  {code:"UNRELIABLE_REALITY", label:"Is this even real?", gloss:"the book won't confirm what's actually happening"},
+  {code:"RIGHTEOUS_ANGER", label:"Focused, righteous anger", gloss:"fury aimed with precision at something real"},
+  {code:"SLOW_BURN_ROMANCE", label:"Slow-burn yearning", gloss:"the ache of 'almost', stretched to its limit"},
+  {code:"MAXIMALIST_MIND", label:"Overflowing intelligence", gloss:"more ideas crammed in than the book strictly needs"},
+  {code:"CLAUSTROPHOBIC_SETTING", label:"The walls closing in", gloss:"pressure from a confined, inescapable space"},
+  {code:"TRICKSTER_PLOT", label:"A clever heist or trick", gloss:"the delight of a sharp plan and its reversals"},
+  {code:"ELEGIAC_TONE", label:"Beautiful and ending", gloss:"beauty soaked in the sense that things are passing"},
+  {code:"FRACTURED_IDENTITY", label:"A self coming apart", gloss:"identity fragmenting or assembling wrong"},
+  {code:"POLITICAL_MACHINE", label:"Power moving in rooms", gloss:"machination, whispers, the mechanics of power"},
+  {code:"TACTILE_PLACE", label:"A place you can touch", gloss:"a setting so vivid it becomes a character"},
+  {code:"EXISTENTIAL_QUIET", label:"Big questions, softly", gloss:"the meaning-of-it-all asked without melodrama"},
+  {code:"PROPULSIVE_PLOT", label:"Can't stop turning pages", gloss:"pure forward momentum"},
+  {code:"INTERROGATING_TECH", label:"Technology questioned", gloss:"a tool examined for what it does to us"},
+  {code:"CHORAL_VOICES", label:"A chorus of voices", gloss:"a whole community told through many narrators"},
+  {code:"DARK_HUMOUR", label:"Laughing at the wrong moment", gloss:"comedy aimed exactly where it shouldn't be, on purpose"},
+  {code:"MYTHIC_RESONANCE", label:"Old stories humming underneath", gloss:"a tale that resonates with myth and fable"},
+  {code:"FORENSIC_PSYCHOLOGY", label:"A character X-rayed", gloss:"someone dissected to the bone, motive by motive"},
+  {code:"HOPE_AGAINST_ODDS", label:"Hope that costs something", gloss:"optimism that's earned, not handed out"},
+  {code:"UNSETTLING_CHILDHOOD", label:"Childhood made strange", gloss:"the uncanny seen through a young, unguarded eye"},
+  {code:"INTELLECTUAL_THRILLER", label:"Ideas as a thriller", gloss:"the stakes are an argument - and it grips"},
+  {code:"LONELY_INTERIOR", label:"Profound solitude", gloss:"the texture of one mind genuinely alone"},
+  {code:"SUBVERTED_GENRE", label:"A genre turned inside out", gloss:"a familiar shape used to do something unexpected"},
+  {code:"MANNERED_WIT", label:"Sharp social comedy", gloss:"precise, cutting observation of how people perform"},
+  {code:"ENVIRONMENTAL_AWE", label:"Awe at the nonhuman", gloss:"reverence for nature, scale, the more-than-human"},
+  {code:"TRAUMA_ECHO", label:"The past won't stay past", gloss:"trauma echoing forward through a life"},
+  {code:"PLAYFUL_METAFICTION", label:"A book that knows it's a book", gloss:"storytelling that delights in its own seams"}
+];
+TAXONOMY.forEach((t,i)=>{ t.color = COLORS[i % COLORS.length]; });
+const TAX_BY_CODE = Object.fromEntries(TAXONOMY.map(t=>[t.code,t]));
+const TAXONOMY_VERSION = "tax-v1";
+function colorVar(c){ return getComputedStyle(document.documentElement).getPropertyValue('--c-'+c).trim()||'#ff8a8a'; }
+function colorDeepVar(c){ return getComputedStyle(document.documentElement).getPropertyValue('--c-'+c+'-d').trim()||colorVar(c); }
+
+const SEED_CHIPS = ["Piranesi","Project Hail Mary","The Remains of the Day","Station Eleven","Blood Meridian","Never Let Me Go"];
+
+// ---- STORAGE ----------------------------------------------------------------
+// NOTE: Using localStorage — data is per-device/per-browser only.
+// A real shared backend (for global ELO rankings and the Dispensary) is the next phase.
+const ELO_KEY="bp_elo_v1", PROFILE_KEY="bp_profile_v1", PENDING_KEY="bp_pending_v1";
+const DEFAULT_ELO=1500, K=32;
+async function sget(k){ try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;} }
+async function sset(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){console.warn(e);} }
+async function sdel(k){ try{localStorage.removeItem(k);}catch(e){} }
+
+function eloUpdate(elo,mech,winKey,loseKey){
+  if(!elo[mech]) elo[mech]={};
+  const rw=elo[mech][winKey]??DEFAULT_ELO, rl=elo[mech][loseKey]??DEFAULT_ELO;
+  const ew=1/(1+Math.pow(10,(rl-rw)/400));
+  elo[mech][winKey]=Math.round(rw+K*(1-ew));
+  elo[mech][loseKey]=Math.round(rl+K*(0-(1-ew)));
+}
+
+// ---- GOOGLE BOOKS -----------------------------------------------------------
+function gbUrl(q){
+  const k = GOOGLE_BOOKS_KEY ? `&key=${GOOGLE_BOOKS_KEY}` : "";
+  return `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=6&printType=books&country=US${k}`;
+}
+function pickCover(info){
+  const im = info.imageLinks||{};
+  let u = im.thumbnail||im.smallThumbnail||null;
+  if(u){
+    u = u.replace(/^http:/,"https:").replace(/&edge=curl/,"");
+    // request a slightly larger image for crisper covers
+    u = u.replace(/&zoom=\d/,"") + "&zoom=1";
+  }
+  return u;
+}
+let _keyWarned=false;
+async function gbSearch(q){
+  try{
+    const r=await fetch(gbUrl(q));
+    if(!r.ok){
+      if((r.status===403||r.status===400) && GOOGLE_BOOKS_KEY && !_keyWarned){
+        _keyWarned=true;
+        console.warn("Google Books rejected the API key (status "+r.status+"). Check the key is correct and Books API is enabled. Falling back to unkeyed requests.");
+      }
+      throw new Error("GB "+r.status);
+    }
+    const d=await r.json();
+    return (d.items||[]).map(it=>{
+      const v=it.volumeInfo||{};
+      return { id:it.id, title:v.title||"Untitled",
+        author:(v.authors&&v.authors[0])||"Unknown",
+        year:(v.publishedDate||"").slice(0,4)||null,
+        blurb:oneSentence(v.description||""),
+        cover:pickCover(v) };
+    }).filter(b=>b.title);
+  }catch(e){ console.warn("gbSearch",e); return []; }
+}
+function oneSentence(desc){
+  if(!desc) return "";
+  // strip any stray html, take the first sentence, cap length
+  let t=desc.replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
+  const m=t.match(/^.*?[.!?](?=\s|$)/);
+  let s=m?m[0]:t;
+  if(s.length>160) s=s.slice(0,157).replace(/\s+\S*$/,"")+"…";
+  return s;
+}
+function bestHit(hits){
+  // prefer a result that carries BOTH a cover and a blurb, then a cover, then anything
+  return hits.find(h=>h.cover&&h.blurb) || hits.find(h=>h.cover) || hits.find(h=>h.blurb) || hits[0] || null;
+}
+async function gbHydrate(title,author){
+  const tight=await gbSearch(`intitle:${title} ${author?`inauthor:${author}`:""}`.trim());
+  let h=bestHit(tight);
+  if(!h || !h.cover){
+    const loose=await gbSearch(`${title} ${author||""}`.trim());
+    h=bestHit(loose)||h;
+  }
+  if(h) return {title, author:author||h.author, cover:h.cover, blurb:h.blurb||"", key:h.id||(title+"|"+author).toLowerCase()};
+  return {title, author:author||"", cover:null, blurb:"", key:(title+"|"+(author||"")).toLowerCase()};
+}
+
+// ---- CLAUDE API -------------------------------------------------------------
+async function callClaude(prompt,maxTokens){
+  const res=await fetch("/.netlify/functions/claude",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({prompt,maxTokens})
+  });
+  if(!res.ok) throw new Error("API "+res.status);
+  const data=await res.json();
+  return data.text;
+}
+function parseJSON(t){ return JSON.parse(t.replace(/```json|```/g,"").trim()); }
+
+// Offer 3 mechanism options for a book (constrained to taxonomy)
+async function offerMechanisms(title,author){
+  const tax=TAXONOMY.map(t=>`${t.code} = ${t.label}: ${t.gloss}`).join("\n");
+  const prompt=`You help readers articulate WHY a book hooked them. Pick the 3 mechanisms from the controlled list below that most likely explain why someone loved this book — the transferable sources of pleasure, not genre or plot.
+
+You MUST choose only from these codes. Never invent one.
+
+LIST:
+${tax}
+
+Return ONLY JSON, no prose:
+{"options":["CODE1","CODE2","CODE3"]}
+
+Book: "${title}"${author?` by ${author}`:""}.`;
+  const out=parseJSON(await callClaude(prompt,300));
+  return (out.options||[]).filter(c=>TAX_BY_CODE[c]).slice(0,3);
+}
+
+// Map a user's free-text "what I loved" to the nearest canonical mechanism,
+// but keep the raw text for the pending tray.
+async function classifyCustom(title,author,text){
+  const tax=TAXONOMY.map(t=>`${t.code} = ${t.label}`).join("\n");
+  const prompt=`A reader described what they loved about "${title}"${author?` by ${author}`:""}:
+"${text}"
+
+Map this to the SINGLE closest mechanism code from the list (for scoring). Also judge whether their phrasing names something genuinely NOT well captured by any existing code.
+
+LIST:
+${tax}
+
+Return ONLY JSON:
+{"nearest":"CODE","isNovel":true|false,"suggestedLabel":"<short label if novel, else empty>"}`;
+  const out=parseJSON(await callClaude(prompt,300));
+  if(!TAX_BY_CODE[out.nearest]) out.nearest=TAXONOMY[0].code;
+  return out;
+}
+
+// Get candidate books for a mechanism. Prefer the seed library; top up via Claude.
+async function candidatesFor(mechCode,seedTitle){
+  const m=TAX_BY_CODE[mechCode];
+  const lib=SEED_LIBRARY.map(([t,a])=>`${t} — ${a}`).join("\n");
+  const prompt=`From the reader's personal library below, choose 8 books that strongly deliver this reading mechanism:
+
+MECHANISM: ${m.label} (${m.gloss})
+
+Exclude "${seedTitle}". Return ONLY JSON, an array of objects with exact title/author as written:
+{"books":[{"title":"...","author":"..."}, ...]}
+
+LIBRARY:
+${lib}`;
+  try{
+    const out=parseJSON(await callClaude(prompt,800));
+    let books=(out.books||[]).filter(b=>b.title && b.title.toLowerCase()!==seedTitle.toLowerCase());
+    if(books.length>=4) return books.slice(0,8);
+  }catch(e){ console.warn(e); }
+  // fallback: random sample from library
+  const pool=SEED_LIBRARY.filter(([t])=>t.toLowerCase()!==seedTitle.toLowerCase());
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  return pool.slice(0,8).map(([t,a])=>({title:t,author:a}));
+}
+
+// ============================================================================
+// FLOW
+// ============================================================================
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));$('view-'+v).classList.add('active');window.scrollTo(0,0);}
+function toast(msg){const t=$('toast');if(msg)t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+let STATE={ seed:null, mech:null, pool:[], queue:[], currentCard:null, hydrated:{}, matchCount:0, elo:{}, profile:null, pending:[] };
+
+// ---- intake search ----
+let stimer=null;
+$('search').addEventListener('input',e=>{
+  const q=e.target.value.trim();
+  clearTimeout(stimer);
+  if(q.length<3){$('results').classList.remove('show');return;}
+  stimer=setTimeout(async()=>{
+    const hits=await gbSearch(q);
+    const box=$('results');
+    if(!hits.length){box.classList.remove('show');return;}
+    box.innerHTML=hits.slice(0,6).map((h,i)=>`<button class="rcard" data-i="${i}">
+      ${h.cover?`<img src="${esc(h.cover)}" alt="">`:`<div class="ph">📖</div>`}
+      <div><div class="rt">${esc(h.title)}</div><div class="ra">${esc(h.author)}${h.year?` · ${h.year}`:""}</div></div>
+    </button>`).join("");
+    box.classList.add('show');
+    box.querySelectorAll('.rcard').forEach(el=>el.onclick=()=>pickSeed(hits[+el.dataset.i]));
+  },300);
+});
+
+function renderSeedChips(){
+  $('seedchips').innerHTML=SEED_CHIPS.map(b=>`<button class="schip">${esc(b)}</button>`).join("");
+  $('seedchips').querySelectorAll('.schip').forEach((c,i)=>c.onclick=async()=>{
+    const hits=await gbSearch(SEED_CHIPS[i]); pickSeed(hits[0]||{title:SEED_CHIPS[i],author:"",cover:null});
+  });
+}
+
+async function pickSeed(book){
+  STATE.seed=book; STATE.matchCount=0;
+  STATE.elo=await sget(ELO_KEY)||{};
+  STATE.profile=await sget(PROFILE_KEY)||{votes:0,mechVotes:{},winsByMech:{}};
+  STATE.pending=await sget(PENDING_KEY)||[];
+  $('results').classList.remove('show');
+  renderChosenBook();
+  show('mech');
+  $('mechBody').innerHTML=`<div class="mechloading"><div class="spinner"></div><div class="ml-txt">Working out what makes <em>${esc(book.title)}</em> special…</div></div>`;
+  try{
+    const codes=await offerMechanisms(book.title,book.author);
+    renderMechOptions(codes);
+  }catch(e){
+    $('mechBody').innerHTML=`<div class="err">Couldn't reach the engine just now. ${esc(e.message)}</div>
+      <button class="btn full" onclick="location.reload()">Try again</button>`;
+  }
+}
+
+function renderChosenBook(){
+  const b=STATE.seed;
+  $('chosenBook').innerHTML=`
+    ${b.cover?`<img src="${esc(b.cover)}" alt="">`:`<div class="cb-ph">📖</div>`}
+    <div><div class="cbt serif">${esc(b.title)}</div><div class="cba">${esc(b.author||"")}</div></div>
+    <button class="change" id="changeBook">change</button>`;
+  $('changeBook').onclick=()=>{show('intake');$('search').value='';$('results').classList.remove('show');};
+}
+
+function renderMechOptions(codes){
+  const opts=codes.map(code=>{
+    const m=TAX_BY_CODE[code];
+    return `<button class="mopt" data-code="${code}">
+      <span class="swatch" style="background:${colorVar(m.color)}"></span>
+      <span><span class="mo-name">${esc(m.label)}</span><span class="mo-gloss">${esc(m.gloss)}</span></span>
+    </button>`;
+  }).join("");
+  $('mechBody').innerHTML=`
+    <h2 class="serif">What did you love about it? <span class="mp-inline">- pick the thing that actually hooked you</span></h2>
+    <p class="mp-sub">This is what we'll match other books on.</p>
+    <div class="mechopts">
+      ${opts}
+      <button class="mopt custom" id="customToggle">
+        <span class="swatch" style="background:var(--cream-edge)"></span>
+        <span><span class="mo-name">Something else…</span><span class="mo-gloss">Describe it in your own words</span></span>
+      </button>
+      <div class="custom-field" id="customField">
+        <textarea id="customText" rows="3" placeholder="e.g. the way it made loneliness feel almost beautiful…"></textarea>
+        <button class="btn cf-go" id="customGo">Use this</button>
+      </div>
+    </div>`;
+  $('mechBody').querySelectorAll('.mopt[data-code]').forEach(el=>el.onclick=()=>chooseMech(el.dataset.code));
+  $('customToggle').onclick=()=>{$('customField').classList.toggle('show');$('customText').focus();};
+  $('customGo').onclick=async()=>{
+    const txt=$('customText').value.trim();
+    if(txt.length<4){$('customText').focus();return;}
+    $('customGo').disabled=true;$('customGo').textContent="Reading…";
+    try{
+      const r=await classifyCustom(STATE.seed.title,STATE.seed.author,txt);
+      // pending tray: store raw text + nearest mapping for Tom's later curation
+      STATE.pending.push({text:txt,nearest:r.nearest,isNovel:!!r.isNovel,
+        suggestedLabel:r.suggestedLabel||"",book:STATE.seed.title,at:Date.now()});
+      await sset(PENDING_KEY,STATE.pending);
+      chooseMech(r.nearest, txt);
+    }catch(e){ $('customGo').disabled=false;$('customGo').textContent="Use this";toast("Try rephrasing"); }
+  };
+}
+
+async function chooseMech(code, customText){
+  STATE.mech=TAX_BY_CODE[code];
+  STATE.customText=customText||null;
+  const c=STATE.mech.color;
+  $('mechTag').style.background=colorDeepVar(c);
+  $('mechTagName').textContent=STATE.mech.label;
+  $('seedName').textContent=STATE.seed.title;
+  $('swipeQ').innerHTML=`Does this scratch the <em>${esc(STATE.mech.label.toLowerCase())}</em> itch?`;
+  show('lab');
+  renderDots();
+  $('cardstage').innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--ink-soft);width:100%"><div class="spinner" style="margin:0 auto 14px"></div>Pulling books that share this…</div>`;
+  $('swipeActions').style.visibility='hidden';
+  try{
+    const cands=await candidatesFor(code, STATE.seed.title);
+    STATE.pool=cands; STATE.hydrated={}; STATE.queue=[...cands];
+    // shuffle queue
+    for(let i=STATE.queue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[STATE.queue[i],STATE.queue[j]]=[STATE.queue[j],STATE.queue[i]];}
+    nextCard();
+  }catch(e){
+    $('cardstage').innerHTML=`<div class="err" style="width:100%">Couldn't load candidates. ${esc(e.message)}</div>`;
+  }
+}
+
+function renderDots(){
+  $('dots').innerHTML=Array.from({length:MATCHES_PER_ROUND},(_,i)=>{
+    let cls="d"; if(i<STATE.matchCount)cls+=" done"; else if(i===STATE.matchCount)cls+=" live";
+    return `<span class="${cls}"></span>`;
+  }).join("");
+}
+
+function fitOf(key){const m=STATE.mech.code;return (STATE.elo[m]&&STATE.elo[m][key])??DEFAULT_ELO;}
+
+async function hydrateCand(c){
+  const ck=(c.title+"|"+(c.author||"")).toLowerCase();
+  if(STATE.hydrated[ck]) return STATE.hydrated[ck];
+  const h=await gbHydrate(c.title,c.author);
+  STATE.hydrated[ck]=h; return h;
+}
+
+async function nextCard(){
+  if(STATE.matchCount>=MATCHES_PER_ROUND){ return goDispensary(); }
+  if(!STATE.queue||!STATE.queue.length){ return goDispensary(); }
+  const cand=STATE.queue.shift();
+  $('cardstage').innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--ink-soft);width:100%"><div class="spinner" style="margin:0 auto"></div></div>`;
+  $('swipeActions').style.visibility='hidden';
+  const h=await hydrateCand(cand);
+  STATE.currentCard={...cand,...h};
+  renderCard();
+}
+
+function renderCard(){
+  const c=STATE.currentCard;
+  $('cardstage').innerHTML=`
+    <div class="deck-hint"></div>
+    <div class="swipecard entering" id="swcard">
+      <div class="stamp yes">Fits</div>
+      <div class="stamp no">Nope</div>
+      <div class="cov">${c.cover?`<img src="${esc(c.cover)}" alt="" draggable="false">`:`<div class="noc">${esc(c.title)}</div>`}</div>
+      <div class="vt"><div class="vtt">${esc(c.title)}</div><div class="vta">${esc(c.author||"")}</div>${c.blurb?`<div class="vblurb">${esc(c.blurb)}</div>`:""}</div>
+    </div>`;
+  $('swipeActions').style.visibility='visible';
+  attachDrag($('swcard'));
+}
+
+let voting=false;
+async function castVote(verdict){ // 'yes' | 'no' | 'skip'
+  if(voting)return; voting=true;
+  const c=STATE.currentCard;
+  const key=(c.title+"|"+(c.author||"")).toLowerCase();
+  const m=STATE.mech.code;
+  const card=$('swcard');
+
+  if(verdict!=='skip'){
+    // fit score: treat yes/no as a result against a neutral baseline so scores stay comparable
+    if(!STATE.elo[m]) STATE.elo[m]={};
+    const cur=STATE.elo[m][key]??DEFAULT_ELO;
+    const score=verdict==='yes'?1:0;
+    const exp=1/(1+Math.pow(10,(DEFAULT_ELO-cur)/400));
+    STATE.elo[m][key]=Math.round(cur+K*(score-exp));
+    STATE.profile.bookInfo=STATE.profile.bookInfo||{};
+    STATE.profile.bookInfo[key]={title:c.title,author:c.author,cover:c.cover||null};
+    STATE.profile.votes=(STATE.profile.votes||0)+1;
+    STATE.profile.mechVotes[m]=(STATE.profile.mechVotes[m]||0)+1;
+    await sset(ELO_KEY,STATE.elo); await sset(PROFILE_KEY,STATE.profile);
+    STATE.matchCount++; renderDots();
+  }
+
+  if(card) card.classList.add(verdict==='yes'?'leaving-yes':verdict==='no'?'leaving-no':'leaving-skip');
+  setTimeout(()=>{ voting=false; nextCard(); }, verdict==='skip'?300:360);
+}
+
+// ---- drag-to-swipe ----
+function attachDrag(card){
+  if(!card) return;
+  let startX=0,startY=0,dx=0,dy=0,dragging=false;
+  const threshold=80;
+  function down(e){
+    if(voting)return;
+    dragging=true;
+    const p=e.touches?e.touches[0]:e;
+    startX=p.clientX;startY=p.clientY;
+    card.style.transition='none';card.style.cursor='grabbing';
+  }
+  function move(e){
+    if(!dragging)return;
+    const p=e.touches?e.touches[0]:e;
+    dx=p.clientX-startX;dy=p.clientY-startY;
+    const rot=dx/18;
+    card.style.transform=`translateX(-50%) translate(${dx}px,${dy}px) rotate(${rot}deg)`;
+    card.classList.toggle('show-yes',dx>40);
+    card.classList.toggle('show-no',dx<-40);
+    if(e.cancelable && Math.abs(dx)>Math.abs(dy)) e.preventDefault();
+  }
+  function up(){
+    if(!dragging)return;
+    dragging=false;card.style.cursor='grab';
+    if(dx>threshold){ castVote('yes'); }
+    else if(dx<-threshold){ castVote('no'); }
+    else if(dy<-threshold){ castVote('skip'); }
+    else { card.style.transition='transform .2s';card.style.transform='translateX(-50%)';card.classList.remove('show-yes','show-no'); }
+    dx=dy=0;
+  }
+  card.addEventListener('mousedown',down);
+  window.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',up);
+  card.addEventListener('touchstart',down,{passive:true});
+  card.addEventListener('touchmove',move,{passive:false});
+  card.addEventListener('touchend',up);
+}
+
+$('voteYes').onclick=()=>castVote('yes');
+$('voteNo').onclick=()=>castVote('no');
+$('voteSkip').onclick=()=>castVote('skip');
+$('finishEarly').onclick=goDispensary;
+$('anotherBook').onclick=()=>{show('intake');$('search').value='';$('results').classList.remove('show');};
+$('homeBtn').onclick=()=>{show('intake');$('search').value='';$('results').classList.remove('show');};
+
+// ---- dispensary ----
+function goDispensary(){
+  const mech=STATE.mech, c=mech.color;
+  document.documentElement.style.setProperty('--c-teal',colorVar(c));
+  $('dispSub').innerHTML=`Books that scratch the same itch as <b>${esc(STATE.seed.title)}</b> — ranked by what readers chose.`;
+
+  // top winners for this mechanism, by ELO
+  const me=STATE.elo[mech.code]||{};
+  const ranked=Object.entries(me).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const info=STATE.profile.bookInfo||{};
+  $('winnerBox').innerHTML=`<div class="wlbl" style="color:${colorDeepVar(c)}">Top matches · ${esc(mech.label)}</div>`+
+    (ranked.length? ranked.map(([k,r])=>{
+      const b=info[k]||{title:k.split("|")[0],author:k.split("|")[1]||""};
+      return `<div class="winrow">
+        ${b.cover?`<img src="${esc(b.cover)}" alt="">`:`<div class="wn-ph">📖</div>`}
+        <div><div class="wnt">${esc(b.title)}</div><div class="wna">${esc(b.author||"")}</div></div>
+        <div class="wne" style="color:${colorDeepVar(c)};background:${colorVar(c)}28">${r}</div>
+      </div>`;
+    }).join("")
+    : `<div style="color:var(--ink-soft);font-size:13px;padding:6px 0">Cast a few votes and your top matches appear here.</div>`);
+
+  // dispensary CTA — worded with this session's mechanism
+  const cta=$('dispCta');
+  cta.innerHTML=`<span class="cta-eyebrow">Coming soon</span>
+    <span class="cta-main">See what everyone's favourite <em>${esc(mech.label.toLowerCase())}</em> reads are</span>
+    <span class="cta-arrow">→</span>`;
+  cta.style.setProperty('--cta-c',colorVar(c));
+  cta.style.setProperty('--cta-cd',colorDeepVar(c));
+  show('disp');
+}
+
+function shareText(){
+  const mech=STATE.mech;
+  const me=STATE.elo[mech.code]||{};
+  const top=Object.entries(me).sort((a,b)=>b[1]-a[1])[0];
+  const info=STATE.profile.bookInfo||{};
+  let topName="";
+  if(top){ const b=info[top[0]]; topName=b?b.title:top[0].split("|")[0]; }
+  const seed=STATE.seed?STATE.seed.title:"a book I loved";
+  return `📖 Bookprint\nLoved ${seed} for "${mech.label}"?\n${topName?`Top match so far: ${topName}\n`:""}\nFind what scratches your itch → Bookprint`;
+}
+$('shareDisp').onclick=()=>{const t=shareText();if(navigator.share)navigator.share({text:t}).catch(()=>copy(t));else copy(t);};
+$('dispCta').onclick=()=>toast("The Dispensary opens soon");
+function copy(t){navigator.clipboard?.writeText(t).then(()=>toast("Copied")).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast("Copied");}catch(e){}a.remove();});}
+
+renderSeedChips();
+
+</script>
+</body>
+</html>
