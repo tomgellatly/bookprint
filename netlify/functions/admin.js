@@ -22,9 +22,20 @@ exports.handler = async function (event) {
     return { statusCode: 400, headers: CORS_HEADERS, body: JSON.stringify({ error: "Invalid JSON" }) };
   }
 
-  const adminPassword = process.env.ADMIN_PASSWORD;
+   const adminPassword = process.env.ADMIN_PASSWORD;
   if (!adminPassword || password !== adminPassword) {
-    return { statusCode: 401, headers: CORS_HEADERS, body: JSON.stringify({ error: "Unauthorised" }) };
+    return {
+      statusCode: 401,
+      headers: CORS_HEADERS,
+      body: JSON.stringify({
+        error: "Unauthorised",
+        debug: {
+          envVarSet: !!adminPassword,
+          envVarLength: adminPassword ? adminPassword.length : 0,
+          submittedLength: password ? password.length : 0,
+        },
+      }),
+    };
   }
 
   // getStore MUST be called inside the handler
