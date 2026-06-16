@@ -426,8 +426,7 @@ function eloUpdate(elo,mech,winKey,loseKey){
 
 // ---- GOOGLE BOOKS -----------------------------------------------------------
 function gbUrl(q){
-  const k = GOOGLE_BOOKS_KEY ? `&key=${GOOGLE_BOOKS_KEY}` : "";
-  return `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=6&printType=books&country=US${k}`;
+  return `/.netlify/functions/claude?searchQuery=${encodeURIComponent(q)}`;
 }
 function pickCover(info){
   const im = info.imageLinks || {};
