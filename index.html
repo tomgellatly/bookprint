@@ -426,8 +426,7 @@ function eloUpdate(elo,mech,winKey,loseKey){
 
 // ---- GOOGLE BOOKS -----------------------------------------------------------
 function gbUrl(q){
-  // Route all requests through your Netlify proxy
-  return `/.netlify/functions/claude?searchQuery=${encodeURIComponent(q)}`;
+  return `/.netlify/functions/books?searchQuery=${encodeURIComponent(q)}`;
 }
 function pickCover(info){
   const im = info.imageLinks || {};
@@ -442,7 +441,7 @@ function pickCover(info){
 let _keyWarned=false;
 async function gbSearch(q){
   try{
-    const r=await fetch(`/.netlify/functions/claude?searchQuery=${encodeURIComponent(q)}`);
+    const r=await fetch(`/.netlify/functions/books?searchQuery=${encodeURIComponent(q)}`);
 if(!r.ok){
       if((r.status===403||r.status===400) && GOOGLE_BOOKS_KEY && !_keyWarned){
         _keyWarned=true;
