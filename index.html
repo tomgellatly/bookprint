@@ -442,8 +442,8 @@ function pickCover(info){
 let _keyWarned=false;
 async function gbSearch(q){
   try{
-    const r=await fetch(gbUrl(q));
-    if(!r.ok){
+    const r=await fetch(`/.netlify/functions/claude?searchQuery=${encodeURIComponent(q)}`);
+if(!r.ok){
       if((r.status===403||r.status===400) && GOOGLE_BOOKS_KEY && !_keyWarned){
         _keyWarned=true;
         console.warn("Google Books rejected the API key (status "+r.status+"). Check the key is correct and Books API is enabled. Falling back to unkeyed requests.");
