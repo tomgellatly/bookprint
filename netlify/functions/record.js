@@ -61,7 +61,11 @@ exports.handler = async function (event) {
   }
 
   // getStore MUST be called inside the handler, not at module level
-  const store = getStore("bookprint-events");
+  const store = getStore({
+    name: "bookprint-events",
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.BLOBS_TOKEN,
+  });
 
   try {
     const ts = Date.now();
