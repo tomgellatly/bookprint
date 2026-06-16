@@ -95,6 +95,25 @@
     font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;box-shadow:0 2px 6px var(--shadow);transition:.14s;}
   .schip:hover{transform:translateY(-2px);color:var(--c-rose-d);box-shadow:0 5px 12px var(--shadow-d);}
 
+  /* ---------- homepage entry fork ---------- */
+  .entryfork{display:flex;gap:8px;margin:18px 0 18px;background:var(--paper-2);border-radius:14px;
+    padding:5px;box-shadow:0 2px 8px var(--shadow);}
+  .ef-tab{flex:1;border:none;background:none;font-family:inherit;font-weight:700;font-size:12.5px;
+    padding:10px 8px;border-radius:10px;cursor:pointer;color:var(--ink-soft);transition:.14s;}
+  .ef-tab.active{background:var(--c-lime);color:#fff;box-shadow:0 2px 8px var(--shadow);}
+  .ef-tab:not(.active):hover{color:var(--ink);}
+  .ef-panel{display:none;}
+  .ef-panel.active{display:block;animation:rise .3s cubic-bezier(.2,.8,.2,1);}
+  .mechbrowse{display:grid;grid-template-columns:1fr 1fr;gap:9px;max-height:48vh;overflow-y:auto;
+    padding:2px 2px 4px;}
+  .mb-card{display:flex;flex-direction:column;gap:5px;text-align:left;border:none;cursor:pointer;
+    background:var(--paper-2);border-radius:13px;padding:12px 13px;box-shadow:0 2px 7px var(--shadow);
+    transition:.14s;}
+  .mb-card:hover{transform:translateY(-2px);box-shadow:0 6px 14px var(--shadow-d);}
+  .mb-card .mb-dot{width:9px;height:9px;border-radius:50%;}
+  .mb-card .mb-label{font-weight:700;font-size:12.5px;color:var(--ink);line-height:1.25;}
+  .mb-card .mb-gloss{font-size:10.5px;color:var(--ink-faint);line-height:1.3;}
+
   /* ---------- mechanism pick ---------- */
   .mechpick{flex:1;display:flex;flex-direction:column;padding:18px 24px 28px;}
   .chosen-book{display:flex;gap:14px;align-items:center;background:var(--paper-2);border-radius:18px;padding:13px;
@@ -235,8 +254,53 @@
 
   .dispensary-note{font-size:12px;color:var(--ink-faint);text-align:center;line-height:1.5;margin-top:14px;}
 
+  /* ---------- dispensary graph ---------- */
+  .graphpage{flex:1;display:flex;flex-direction:column;padding:18px 18px 24px;overflow:hidden;}
+  .graph-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;}
+  .graph-back{flex-shrink:0;width:36px;height:36px;border-radius:50%;border:2px solid var(--cream-edge);
+    background:var(--paper-2);font-size:16px;color:var(--ink-soft);cursor:pointer;display:flex;
+    align-items:center;justify-content:center;}
+  .graph-back:hover{border-color:var(--c-teal);color:var(--ink);}
+  .graph-legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;max-height:84px;overflow-y:auto;
+    padding:2px;}
+  .glegend-chip{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
+    border-radius:999px;padding:5px 11px;border:1.5px solid transparent;cursor:pointer;
+    background:var(--cream-edge);color:var(--ink-soft);transition:.12s;white-space:nowrap;}
+  .glegend-chip .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .glegend-chip.active{background:var(--gc,var(--c-teal));color:#fff;}
+  .glegend-chip:hover{border-color:var(--gc,var(--c-teal));}
+  .graph-stage{position:relative;flex:1;min-height:340px;background:var(--paper-2);
+    border-radius:16px;box-shadow:0 3px 14px var(--shadow);overflow:hidden;touch-action:none;}
+  .graph-stage svg{width:100%;height:100%;display:block;cursor:grab;}
+  .graph-stage svg:active{cursor:grabbing;}
+  .gnode{cursor:pointer;}
+  .gnode circle{fill:var(--paper-2);stroke-width:2.5px;}
+  .gnode text{font-size:9.5px;font-weight:700;fill:var(--ink);pointer-events:none;
+    font-family:system-ui,sans-serif;}
+  .gnode.dim{opacity:.16;}
+  .gnode.selected circle{stroke-width:4px;}
+  .gedge{stroke-linecap:round;fill:none;}
+  .gedge.dim{opacity:.06;}
+  .graph-detail{margin-top:10px;}
+  .gd-card{display:flex;gap:12px;align-items:flex-start;background:var(--paper-2);
+    border-radius:14px;padding:14px;box-shadow:0 2px 10px var(--shadow);}
+  .gd-card .gd-ph{width:44px;height:64px;border-radius:8px;flex-shrink:0;
+    background:linear-gradient(135deg,var(--cream-edge),#ddd4c2);display:flex;align-items:center;
+    justify-content:center;font-size:18px;}
+  .gd-title{font-family:'Fraunces',serif;font-weight:600;font-size:15px;line-height:1.25;}
+  .gd-author{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .gd-mechs{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+  .gd-mechtag{font-size:10.5px;font-weight:700;border-radius:999px;padding:3px 9px;color:#fff;}
+  .graph-empty{padding:50px 20px;text-align:center;color:var(--ink-soft);font-size:13px;line-height:1.6;}
+
   footer{text-align:center;padding:14px;font-size:11px;color:var(--ink-faint);}
   footer b{color:var(--ink-soft);}
+  .readercount{color:var(--c-lime-d);font-weight:800;position:relative;padding-left:11px;}
+  .readercount::before{content:'';position:absolute;left:0;top:50%;width:6px;height:6px;
+    border-radius:50%;background:var(--c-lime-d);transform:translateY(-50%);
+    animation:livepulse 1.8s ease-in-out infinite;}
+  @keyframes livepulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(106,151,43,.45);}
+    50%{opacity:.55;box-shadow:0 0 0 3px rgba(106,151,43,0);}}
 
   .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--paper-2);
     padding:12px 22px;border-radius:999px;font-size:12px;font-weight:700;opacity:0;pointer-events:none;transition:.3s;z-index:80;box-shadow:0 6px 20px var(--shadow-d);}
@@ -262,15 +326,29 @@
     <div class="intake">
       <div class="kicker"><span class="pip"></span> Find your next obsession</div>
       <h1 class="serif">Most book apps show you titles that look alike. None of them tell you <span class="hl">why</span> one clicked.</h1>
-      <p class="blurb">Bookprint goes deeper than "popular in your genre." We help you work out exactly what your favourite books did to you - the specific itch each one scratched - then find you more of that. Pick one you loved, and let's figure out why.</p>
-      <div class="searchbox">
-        <span class="mag">⌕</span>
-        <input id="search" type="text" placeholder="Search a title or author…" autocomplete="off">
+      <p class="blurb">Bookprint goes deeper than "popular in your genre." We help you work out exactly what your favourite books did to you - the specific itch each one scratched - then find you more of that.</p>
+
+      <div class="entryfork" id="entryFork">
+        <button class="ef-tab active" id="efTabBook" data-mode="book">Start with a book I loved</button>
+        <button class="ef-tab" id="efTabMech" data-mode="mech">Browse by what I'm craving</button>
       </div>
-      <div class="results" id="results"></div>
-      <div class="seedrow" id="seedrow">
-        <div class="sl">Try one of these</div>
-        <div class="seedchips" id="seedchips"></div>
+
+      <div class="ef-panel active" id="efPanelBook">
+        <p class="blurb" style="margin-top:0">Pick one you loved, and let's figure out why.</p>
+        <div class="searchbox">
+          <span class="mag">⌕</span>
+          <input id="search" type="text" placeholder="Search a title or author…" autocomplete="off">
+        </div>
+        <div class="results" id="results"></div>
+        <div class="seedrow" id="seedrow">
+          <div class="sl">Try one of these</div>
+          <div class="seedchips" id="seedchips"></div>
+        </div>
+      </div>
+
+      <div class="ef-panel" id="efPanelMech">
+        <p class="blurb" style="margin-top:0">What are you looking for? Pick a feeling and see the web of books readers say deliver it.</p>
+        <div class="mechbrowse" id="mechBrowse"></div>
       </div>
     </div>
   </section>
@@ -329,7 +407,28 @@
     </div>
   </section>
 
-  <footer>Bookprint · <b>community beta</b> · seeded with 430 books</footer>
+  <!-- DISPENSARY GRAPH -->
+  <section class="view" id="view-graph">
+    <div class="graphpage">
+      <div class="graph-head">
+        <button class="graph-back" id="graphBack" title="Back">←</button>
+        <div>
+          <h2 class="serif">The <span class="hl">Dispensary</span></h2>
+          <p class="dsub" id="graphSub">Books connected by what readers say they share.</p>
+        </div>
+      </div>
+      <div class="graph-legend" id="graphLegend"></div>
+      <div class="graph-stage" id="graphStage">
+        <div class="loading" style="padding:60px 0;text-align:center;color:var(--ink-faint)">
+          <div class="spinner" style="margin:0 auto 10px"></div>
+          Building the web…
+        </div>
+      </div>
+      <div class="graph-detail" id="graphDetail"></div>
+    </div>
+  </section>
+
+  <footer>Bookprint · <b>community beta</b> · based on the taste of <span class="readercount" id="readerCount">1030</span> readers</footer>
 </div>
 <div class="toast" id="toast">Copied</div>
 
@@ -686,6 +785,29 @@ $('search').addEventListener('input',e=>{
   },300);
 });
 
+// ---- homepage entry fork: book search vs mechanism browse ----
+function setEntryMode(mode){
+  $('efTabBook').classList.toggle('active', mode==='book');
+  $('efTabMech').classList.toggle('active', mode==='mech');
+  $('efPanelBook').classList.toggle('active', mode==='book');
+  $('efPanelMech').classList.toggle('active', mode==='mech');
+  if(mode==='mech' && !$('mechBrowse').children.length) renderMechBrowse();
+}
+$('efTabBook').onclick=()=>setEntryMode('book');
+$('efTabMech').onclick=()=>setEntryMode('mech');
+
+function renderMechBrowse(){
+  $('mechBrowse').innerHTML=TAXONOMY.map(m=>`
+    <button class="mb-card" data-code="${esc(m.code)}">
+      <span class="mb-dot" style="background:${colorVar(m.color)}"></span>
+      <span class="mb-label">${esc(m.label)}</span>
+      <span class="mb-gloss">${esc(m.gloss)}</span>
+    </button>`).join("");
+  $('mechBrowse').querySelectorAll('.mb-card').forEach(el=>{
+    el.onclick=()=>openGraph(el.dataset.code,'intake');
+  });
+}
+
 function renderSeedChips(){
   $('seedchips').innerHTML=SEED_CHIPS.map(b=>`<button class="schip">${esc(b)}</button>`).join("");
   $('seedchips').querySelectorAll('.schip').forEach((c,i)=>c.onclick=async()=>{
@@ -959,10 +1081,10 @@ function goDispensary(){
     sectionHTML(`Didn't have this vibe`, no, c, "Cast a few no votes and they'll land here.") +
     sectionHTML(`Haven't read it (yet!)`, skip, c, "Tap \"Haven't read it\" on a card and it'll land here.");
 
-  // dispensary CTA — worded with this session's mechanism
+  // dispensary CTA — now links through to the live graph
   const cta=$('dispCta');
-  cta.innerHTML=`<span class="cta-eyebrow">Coming soon</span>
-    <span class="cta-main">See what everyone's favourite <em>${esc(mech.label.toLowerCase())}</em> reads are</span>
+  cta.innerHTML=`<span class="cta-eyebrow">Now open</span>
+    <span class="cta-main">See the whole web of <em>${esc(mech.label.toLowerCase())}</em> reads</span>
     <span class="cta-arrow">→</span>`;
   cta.style.setProperty('--cta-c',colorVar(c));
   cta.style.setProperty('--cta-cd',colorDeepVar(c));
@@ -980,8 +1102,278 @@ function shareText(){
   return `📖 Bookprint\nLoved ${seed} for "${mech.label}"?\n${topName?`Top match so far: ${topName}\n`:""}\nFind what scratches your itch → Bookprint`;
 }
 $('shareDisp').onclick=()=>{const t=shareText();if(navigator.share)navigator.share({text:t}).catch(()=>copy(t));else copy(t);};
-$('dispCta').onclick=()=>toast("The Dispensary opens soon");
+$('dispCta').onclick=()=>openGraph(STATE.mech?STATE.mech.code:null,'disp');
+$('graphBack').onclick=()=>GRAPH.goBack();
 function copy(t){navigator.clipboard?.writeText(t).then(()=>toast("Copied")).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast("Copied");}catch(e){}a.remove();});}
+
+// ---- dispensary graph: books as nodes, mechanisms as labelled edges ----
+const GRAPH=window.GRAPH_NS_BOOKPRINT_DO_NOT_COLLIDE = (function(){
+let data=null;          // raw {nodes, edges, mechanisms} from the server
+let sim=null;           // {nodes:[{id,x,y,vx,vy,r,...}], edgesByNode:Map}
+let activeMech=null;    // mechanismCode currently filtered to, or null = show all
+let selectedNode=null;  // node id currently shown in the detail panel
+let panX=0,panY=0,raf=null;
+let dragNode=null,dragging=false,lastPX=0,lastPY=0;
+
+async function load(){
+  const stage=$('graphStage');
+  stage.innerHTML=`<div class="loading" style="padding:60px 0;text-align:center;color:var(--ink-faint)">
+    <div class="spinner" style="margin:0 auto 10px"></div>Building the web…</div>`;
+  try{
+    const res=await fetch('/.netlify/functions/graph');
+    if(!res.ok) throw new Error('graph fetch '+res.status);
+    data=await res.json();
+  }catch(e){
+    stage.innerHTML=`<div class="graph-empty">Couldn't load the Dispensary right now. ${esc(e.message)}</div>`;
+    return;
+  }
+  if(!data.nodes || data.nodes.length<2){
+    stage.innerHTML=`<div class="graph-empty">Not enough votes yet to draw the web.<br>Match a few more books and check back!</div>`;
+    $('graphLegend').innerHTML='';
+    return;
+  }
+  buildSim();
+  renderLegend();
+  renderSVG();
+  runSim();
+}
+
+function mechColor(code){
+  const m=TAX_BY_CODE[code];
+  return m? colorVar(m.color) : '#999';
+}
+function mechColorD(code){
+  const m=TAX_BY_CODE[code];
+  return m? colorDeepVar(m.color) : '#666';
+}
+function mechLabel(code){
+  const m=TAX_BY_CODE[code];
+  return m? m.label : code;
+}
+
+function buildSim(){
+  const stage=$('graphStage');
+  const w=stage.clientWidth||340, h=Math.max(stage.clientHeight,340)||340;
+  const nodes=data.nodes.map((n,i)=>{
+    const angle=(i/data.nodes.length)*Math.PI*2;
+    return {
+      ...n,
+      r:7+Math.min(10,Math.sqrt(n.totalVotes||1)*2.2),
+      x:w/2+Math.cos(angle)*Math.min(w,h)*0.32+(Math.random()-0.5)*20,
+      y:h/2+Math.sin(angle)*Math.min(w,h)*0.32+(Math.random()-0.5)*20,
+      vx:0,vy:0
+    };
+  });
+  const byId=new Map(nodes.map(n=>[n.id,n]));
+  const edges=data.edges.map(e=>({...e,a:byId.get(e.source),b:byId.get(e.target)}))
+    .filter(e=>e.a&&e.b);
+  sim={nodes,edges,byId,w,h};
+}
+
+function tick(){
+  const {nodes,edges,w,h}=sim;
+  const repel=900, springLen=90, springK=0.02, centerK=0.0025, damp=0.82;
+
+  for(let i=0;i<nodes.length;i++){
+    const a=nodes[i];
+    if(a===dragNode) continue;
+    let fx=(w/2-a.x)*centerK, fy=(h/2-a.y)*centerK;
+    for(let j=0;j<nodes.length;j++){
+      if(i===j) continue;
+      const b=nodes[j];
+      let dx=a.x-b.x, dy=a.y-b.y;
+      let d2=dx*dx+dy*dy; if(d2<1)d2=1;
+      const f=repel/d2;
+      const d=Math.sqrt(d2);
+      fx+=(dx/d)*f; fy+=(dy/d)*f;
+    }
+    a.vx=(a.vx+fx)*damp; a.vy=(a.vy+fy)*damp;
+  }
+  for(const e of edges){
+    if(e.a===dragNode||e.b===dragNode) continue;
+    let dx=e.b.x-e.a.x, dy=e.b.y-e.a.y;
+    const d=Math.sqrt(dx*dx+dy*dy)||1;
+    const f=(d-springLen)*springK;
+    const fx=(dx/d)*f, fy=(dy/d)*f;
+    e.a.vx+=fx; e.a.vy+=fy; e.b.vx-=fx; e.b.vy-=fy;
+  }
+  for(const n of nodes){
+    if(n===dragNode) continue;
+    n.x+=n.vx; n.y+=n.vy;
+    n.x=Math.max(n.r+6,Math.min(w-n.r-6,n.x));
+    n.y=Math.max(n.r+6,Math.min(h-n.r-6,n.y));
+  }
+}
+
+let settleFrames=0;
+function runSim(){
+  cancelAnimationFrame(raf);
+  settleFrames=0;
+  function step(){
+    tick();
+    paint();
+    settleFrames++;
+    // keep simulating while dragging, otherwise settle then stop (cheap on battery)
+    if(dragging || settleFrames<220) raf=requestAnimationFrame(step);
+  }
+  raf=requestAnimationFrame(step);
+}
+
+function renderLegend(){
+  const counts=data.mechanisms.slice().sort((a,b)=>b.bookCount-a.bookCount);
+  $('graphLegend').innerHTML=`<button class="glegend-chip${activeMech===null?' active':''}" data-code="">
+      <span class="dot" style="background:var(--ink-faint)"></span>All</button>`+
+    counts.map(m=>`<button class="glegend-chip${activeMech===m.code?' active':''}" data-code="${esc(m.code)}"
+        style="--gc:${mechColor(m.code)}">
+      <span class="dot" style="background:${mechColor(m.code)}"></span>${esc(mechLabel(m.code))}</button>`).join("");
+  $('graphLegend').querySelectorAll('.glegend-chip').forEach(el=>{
+    el.onclick=()=>{ activeMech=el.dataset.code||null; renderLegend(); paint(); };
+  });
+}
+
+function svgEl(tag,attrs){
+  const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(const k in attrs) el.setAttribute(k,attrs[k]);
+  return el;
+}
+
+let svgRoot=null, gEdges=null, gNodes=null;
+function renderSVG(){
+  const stage=$('graphStage');
+  stage.innerHTML='';
+  svgRoot=svgEl('svg',{viewBox:`0 0 ${sim.w} ${sim.h}`});
+  const g=svgEl('g',{id:'gPan'});
+  gEdges=svgEl('g',{class:'gedges'});
+  gNodes=svgEl('g',{class:'gnodes'});
+  g.appendChild(gEdges); g.appendChild(gNodes);
+  svgRoot.appendChild(g);
+  stage.appendChild(svgRoot);
+
+  for(const e of sim.edges){
+    const line=svgEl('path',{class:'gedge',stroke:mechColor(e.mechanismCode),
+      'stroke-width':Math.min(4,1+Math.log2(1+e.weight))});
+    line.dataset.mech=e.mechanismCode;
+    gEdges.appendChild(line);
+  }
+  for(const n of sim.nodes){
+    const grp=svgEl('g',{class:'gnode'});
+    grp.dataset.id=n.id;
+    const circle=svgEl('circle',{r:n.r,stroke:n.mechanisms[0]?mechColorD(n.mechanisms[0]):'#999'});
+    const label=svgEl('text',{x:0,y:n.r+11,'text-anchor':'middle'});
+    label.textContent=truncate(n.title,16);
+    grp.appendChild(circle); grp.appendChild(label);
+    grp.onpointerdown=(e)=>startDragNode(e,n);
+    grp.onclick=(e)=>{ if(!dragMoved) selectNode(n.id); };
+    gNodes.appendChild(grp);
+  }
+  attachPan();
+}
+
+function truncate(s,n){ return s.length>n? s.slice(0,n-1)+'…' : s; }
+
+function paint(){
+  if(!svgRoot) return;
+  let i=0;
+  for(const e of sim.edges){
+    const path=gEdges.children[i++];
+    if(!path) continue;
+    path.setAttribute('d',`M${e.a.x},${e.a.y} L${e.b.x},${e.b.y}`);
+    const dim=activeMech && e.mechanismCode!==activeMech;
+    path.classList.toggle('dim',!!dim);
+  }
+  i=0;
+  for(const n of sim.nodes){
+    const grp=gNodes.children[i++];
+    if(!grp) continue;
+    grp.setAttribute('transform',`translate(${n.x},${n.y})`);
+    const dim=activeMech && !n.mechanisms.includes(activeMech);
+    grp.classList.toggle('dim',!!dim);
+    grp.classList.toggle('selected',n.id===selectedNode);
+  }
+}
+
+let dragMoved=false;
+function startDragNode(e,n){
+  e.stopPropagation();
+  dragNode=n; dragging=true; dragMoved=false;
+  const move=(ev)=>{
+    dragMoved=true;
+    const pt=screenToSvg(ev.clientX,ev.clientY);
+    n.x=pt.x; n.y=pt.y; n.vx=0; n.vy=0;
+    paint();
+  };
+  const up=()=>{
+    dragNode=null; dragging=false;
+    window.removeEventListener('pointermove',move);
+    window.removeEventListener('pointerup',up);
+    runSim();
+  };
+  window.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',up);
+}
+
+function screenToSvg(cx,cy){
+  const rect=svgRoot.getBoundingClientRect();
+  const x=(cx-rect.left)/rect.width*sim.w - panX;
+  const y=(cy-rect.top)/rect.height*sim.h - panY;
+  return {x,y};
+}
+
+function attachPan(){
+  let panning=false,sx=0,sy=0,startPanX=0,startPanY=0;
+  svgRoot.onpointerdown=(e)=>{
+    if(e.target.closest('.gnode')) return;
+    panning=true; sx=e.clientX; sy=e.clientY; startPanX=panX; startPanY=panY;
+  };
+  window.addEventListener('pointermove',(e)=>{
+    if(!panning) return;
+    panX=startPanX+(e.clientX-sx);
+    panY=startPanY+(e.clientY-sy);
+    $('gPan')?.setAttribute('transform',`translate(${panX},${panY})`);
+  });
+  window.addEventListener('pointerup',()=>{panning=false;});
+}
+
+function selectNode(id){
+  selectedNode=id;
+  paint();
+  const n=sim.byId.get(id);
+  if(!n){ $('graphDetail').innerHTML=''; return; }
+  $('graphDetail').innerHTML=`<div class="gd-card">
+    <div class="gd-ph">📖</div>
+    <div>
+      <div class="gd-title">${esc(n.title)}</div>
+      <div class="gd-author">${esc(n.author||"")}</div>
+      <div class="gd-mechs">${n.mechanisms.map(c=>`<span class="gd-mechtag" style="background:${mechColor(c)}">${esc(mechLabel(c))}</span>`).join("")}</div>
+    </div>
+  </div>`;
+}
+
+let returnView='intake';
+function open(presetMech,fromView){
+  activeMech=presetMech||null;
+  selectedNode=null;
+  returnView=fromView||'intake';
+  $('graphDetail').innerHTML='';
+  show('graph');
+  load();
+}
+function goBack(){ show(returnView); }
+
+return {open,goBack};
+})();
+function openGraph(presetMech,fromView){ GRAPH.open(presetMech,fromView); }
+
+// ---- reader counter (baseline + real votes, fetched fresh on load) ----
+async function loadReaderCount(){
+  try{
+    const res=await fetch('/.netlify/functions/votecount');
+    if(!res.ok) return; // leave the static 1030 fallback already in the markup
+    const data=await res.json();
+    if(typeof data.count==='number') $('readerCount').textContent=data.count.toLocaleString();
+  }catch(e){ /* leave static fallback — never break the homepage over this */ }
+}
+loadReaderCount();
 
 renderSeedChips();
 
