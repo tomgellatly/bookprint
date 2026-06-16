@@ -61,20 +61,8 @@ exports.handler = async function (event) {
   }
 
   // getStore MUST be called inside the handler, not at module level
-  const siteID = process.env.NETLIFY_SITE_ID;
+  const siteID = process.env.BLOBS_SITE_ID;
   const token = process.env.BLOBS_TOKEN;
-  if (!siteID || !token) {
-    return {
-      statusCode: 200,
-      headers: CORS_HEADERS,
-      body: JSON.stringify({
-        debug: true,
-        siteIDPresent: !!siteID,
-        tokenPresent: !!token,
-        tokenLength: token ? token.length : 0,
-      }),
-    };
-  }
   const store = getStore({ name: "bookprint-events", siteID, token });
 
   try {

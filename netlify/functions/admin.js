@@ -39,9 +39,9 @@ exports.handler = async function (event) {
   }
 
   // getStore MUST be called inside the handler
-  const store = getStore({
+ const store = getStore({
     name: "bookprint-events",
-    siteID: process.env.NETLIFY_SITE_ID,
+    siteID: process.env.BLOBS_SITE_ID,
     token: process.env.BLOBS_TOKEN,
   });
 
