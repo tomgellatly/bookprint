@@ -499,8 +499,10 @@ function parseJSON(t){
   if (!t || typeof t !== 'string') {
     throw new Error("The AI engine returned an empty or invalid response.");
   }
-  return JSON.parse(t.replace(/```json|
-```/g,"").trim()); 
+
+  return JSON.parse(
+    t.replace(/```json|```/g, "").trim()
+  );
 }
 
 // Offer 3 mechanism options for a book (constrained to taxonomy)
