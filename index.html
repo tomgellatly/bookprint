@@ -495,7 +495,13 @@ async function callClaude(prompt,maxTokens){
   const data=await res.json();
   return data.text;
 }
-function parseJSON(t){ return JSON.parse(t.replace(/```json|```/g,"").trim()); }
+function parseJSON(t){ 
+  if (!t || typeof t !== 'string') {
+    throw new Error("The AI engine returned an empty or invalid response.");
+  }
+  return JSON.parse(t.replace(/```json|
+```/g,"").trim()); 
+}
 
 // Offer 3 mechanism options for a book (constrained to taxonomy)
 async function offerMechanisms(title,author){
