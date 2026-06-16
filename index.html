@@ -430,12 +430,12 @@ function gbUrl(q){
   return `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=6&printType=books&country=US${k}`;
 }
 function pickCover(info){
-  const im = info.imageLinks||{};
-  let u = im.thumbnail||im.smallThumbnail||null;
-  if(u){
-    u = u.replace(/^http:/,"https:").replace(/&edge=curl/,"");
+  const im = info.imageLinks || {};
+  let u = im.thumbnail || im.smallThumbnail || null;
+  if (u && typeof u === 'string') {
+    u = u.replace(/^http:/, "https:").replace(/&edge=curl/, "");
     // request a slightly larger image for crisper covers
-    u = u.replace(/&zoom=\d/,"") + "&zoom=1";
+    u = u.replace(/&zoom=\d/, "") + "&zoom=1";
   }
   return u;
 }
