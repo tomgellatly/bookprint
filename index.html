@@ -584,28 +584,51 @@ Return ONLY valid JSON and nothing else — no preamble, no explanation, no mark
   return out;
 }
 
-// Get candidate books for a mechanism. Prefer the seed library; top up via Claude.
-async function candidatesFor(mechCode,seedTitle){
+// Pick a small random sample of the curator's library to send as taste
+// calibration. This is few-shot grounding only — it shapes WHICH real-world
+// books the model reaches for, it is never the candidate pool itself.
+function tasteSample(seedTitle,n){
+  const pool=SEED_LIBRARY.filter(([t])=>t.toLowerCase()!==String(seedTitle||"").toLowerCase());
+  const picked=[];
+  const used=new Set();
+  while(picked.length<n && picked.length<pool.length){
+    const i=Math.floor(Math.random()*pool.length);
+    if(used.has(i))continue; used.add(i); picked.push(pool[i]);
+  }
+  return picked;
+}
+
+// Get candidate books for a mechanism. Candidates are NOT restricted to the
+// 430-book seed library — that library is only used as a taste sample so
+// the model proposes in line with the curator's sensibility. The server
+// caches/grows a shared pool per mechanism (any book that gets surfaced or
+// voted on becomes a permanent node), so this gets cheaper and richer for
+// every friend after the first.
+async function candidatesFor(mechCode,seedTitle,seedAuthor){
   const m=TAX_BY_CODE[mechCode];
-  const lib=SEED_LIBRARY.map(([t,a])=>`${t} — ${a}`).join("\n");
-  const prompt=`From the reader's personal library below, choose 8 books that strongly deliver this reading mechanism:
-
-MECHANISM: ${m.label} (${m.gloss})
-
-Exclude "${seedTitle}". Return ONLY valid JSON and nothing else — no preamble, no explanation, no markdown code fences, no trailing comments. Your entire response must be parseable by JSON.parse() as-is:
-{"books":[{"title":"...","author":"..."}, ...]}
-
-LIBRARY:
-${lib}`;
   try{
-    const out=parseJSON(await callClaude(prompt,800));
-    let books=(out.books||[]).filter(b=>b.title && b.title.toLowerCase()!==seedTitle.toLowerCase());
-    if(books.length>=4) return books.slice(0,8);
-  }catch(e){ console.warn(e); }
-  // fallback: random sample from library
-  const pool=SEED_LIBRARY.filter(([t])=>t.toLowerCase()!==seedTitle.toLowerCase());
-  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
-  return pool.slice(0,8).map(([t,a])=>({title:t,author:a}));
+    const res=await fetch("/.netlify/functions/candidates",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        mechanismCode:mechCode, mechanismLabel:m.label, mechanismGloss:m.gloss,
+        seedTitle, seedAuthor:seedAuthor||"",
+        tasteSample:tasteSample(seedTitle,18)
+      })
+    });
+    if(!res.ok) throw new Error("candidates "+res.status);
+    const data=await res.json();
+    let books=(data.books||[]).filter(b=>b.title && b.title.toLowerCase()!==String(seedTitle||"").toLowerCase());
+    if(books.length>=4) return shuffleCopy(books).slice(0,8);
+  }catch(e){ console.warn("candidatesFor",e); }
+  // last-resort fallback only if the server call itself failed outright
+  // (network down, function error) — keeps the Lab usable, not a design choice
+  const pool=SEED_LIBRARY.filter(([t])=>t.toLowerCase()!==String(seedTitle||"").toLowerCase());
+  return shuffleCopy(pool).slice(0,8).map(([t,a])=>({title:t,author:a}));
+}
+function shuffleCopy(arr){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
 }
 
 // ============================================================================
@@ -725,7 +748,7 @@ async function chooseMech(code, customText){
   $('cardstage').innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--ink-soft);width:100%"><div class="spinner" style="margin:0 auto 14px"></div>Pulling books that share this…</div>`;
   $('swipeActions').style.visibility='hidden';
   try{
-    const cands=await candidatesFor(code, STATE.seed.title);
+    const cands=await candidatesFor(code, STATE.seed.title, STATE.seed.author);
     STATE.pool=cands; STATE.hydrated={}; STATE.queue=[...cands];
     // shuffle queue
     for(let i=STATE.queue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[STATE.queue[i],STATE.queue[j]]=[STATE.queue[j],STATE.queue[i]];}
