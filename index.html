@@ -152,7 +152,8 @@
   .dots .d.done{background:var(--c-lime);}
   .dots .d.live{background:var(--c-amber);transform:scaleX(1.1);}
 
-  .q{text-align:center;font-size:15px;font-weight:700;margin-bottom:16px;color:var(--ink);}
+  .q{text-align:center;font-size:15px;font-weight:700;margin-bottom:6px;color:var(--ink);}
+  .gesturehint{text-align:center;font-size:12px;color:var(--ink-faint);margin-bottom:16px;}
   .q em{font-style:italic;font-family:'Fraunces',serif;color:var(--c-teal-d);}
 
   .cardstage{flex:1;position:relative;display:flex;align-items:flex-start;justify-content:center;}
@@ -210,6 +211,8 @@
   .winner{background:var(--paper-2);border-radius:var(--radius);padding:18px;box-shadow:0 5px 18px var(--shadow);margin-bottom:16px;position:relative;overflow:hidden;}
   .winner::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--c-teal),var(--c-lime));}
   .winner .wlbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--c-teal-d);margin-bottom:12px;}
+  .resultsect{margin-bottom:22px;}
+  .resultsect:last-child{margin-bottom:0;}
   .winrow{display:flex;gap:13px;align-items:center;padding:9px 0;border-bottom:1px solid var(--cream-edge);}
   .winrow:last-child{border-bottom:none;}
   .winrow img{width:40px;height:60px;border-radius:7px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 6px var(--shadow);background:var(--cream-edge);}
@@ -294,6 +297,7 @@
       </div>
       <div class="dots" id="dots"></div>
       <div class="q" id="swipeQ">Does this one scratch the same itch?</div>
+      <div class="gesturehint" id="gestureHint">Swipe left if not, right if it does — or tap "Haven't read it" below</div>
       <div class="cardstage" id="cardstage"></div>
       <div class="swipe-actions" id="swipeActions">
         <button class="sa sa-no" id="voteNo" title="Wrong vibe">
@@ -405,7 +409,29 @@ const TAXONOMY_VERSION = "tax-v1";
 function colorVar(c){ return getComputedStyle(document.documentElement).getPropertyValue('--c-'+c).trim()||'#ff8a8a'; }
 function colorDeepVar(c){ return getComputedStyle(document.documentElement).getPropertyValue('--c-'+c+'-d').trim()||colorVar(c); }
 
-const SEED_CHIPS = ["Piranesi","Project Hail Mary","The Remains of the Day","Station Eleven","Blood Meridian","Never Let Me Go"];
+// A wider curated pool of accessible, well-known on-ramp titles — kept
+// separate from SEED_LIBRARY (which is much more niche) so a brand-new
+// visitor's first impression isn't an obscure deep cut. We randomly sample
+// a fresh set of 6 from this pool on every load instead of always showing
+// the same six, so it stays the same for everyone, every time.
+const SEED_CHIP_POOL = [
+  "Piranesi","Project Hail Mary","The Remains of the Day","Station Eleven",
+  "Blood Meridian","Never Let Me Go","Cloud Atlas","The Sense of an Ending",
+  "A Gentleman in Moscow","Pachinko","The Power","Sea of Tranquility",
+  "Tomorrow, and Tomorrow, and Tomorrow","Eleanor Oliphant Is Completely Fine",
+  "The Seven Deaths of Evelyn Hardcastle","Children of Time","The Three Body Problem",
+  "A Man Called Ove","Norwegian Wood","Where The Crawdads Sing"
+];
+function sampleChips(n){
+  const pool=SEED_CHIP_POOL.slice();
+  const picked=[];
+  while(picked.length<n && pool.length){
+    const i=Math.floor(Math.random()*pool.length);
+    picked.push(pool.splice(i,1)[0]);
+  }
+  return picked;
+}
+const SEED_CHIPS = sampleChips(6);
 
 // ---- STORAGE ----------------------------------------------------------------
 // NOTE: Using localStorage — data is per-device/per-browser only.
@@ -639,7 +665,7 @@ const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));$('view-'+v).classList.add('active');window.scrollTo(0,0);}
 function toast(msg){const t=$('toast');if(msg)t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
 
-let STATE={ seed:null, mech:null, pool:[], queue:[], currentCard:null, hydrated:{}, matchCount:0, elo:{}, profile:null, pending:[] };
+let STATE={ seed:null, mech:null, pool:[], queue:[], currentCard:null, hydrated:{}, matchCount:0, elo:{}, profile:null, pending:[], sessionVotes:[] };
 
 // ---- intake search ----
 let stimer=null;
@@ -668,7 +694,7 @@ function renderSeedChips(){
 }
 
 async function pickSeed(book){
-  STATE.seed=book; STATE.matchCount=0;
+  STATE.seed=book; STATE.matchCount=0; STATE.sessionVotes=[];
   STATE.elo=await sget(ELO_KEY)||{};
   STATE.profile=await sget(PROFILE_KEY)||{votes:0,mechVotes:{},winsByMech:{}};
   STATE.pending=await sget(PENDING_KEY)||[];
@@ -807,6 +833,8 @@ async function castVote(verdict){ // 'yes' | 'no' | 'skip'
   const m=STATE.mech.code;
   const card=$('swcard');
 
+  STATE.sessionVotes.push({title:c.title,author:c.author||"",cover:c.cover||null,verdict});
+
   if(verdict!=='skip'){
     // fit score: treat yes/no as a result against a neutral baseline so scores stay comparable
     if(!STATE.elo[m]) STATE.elo[m]={};
@@ -882,7 +910,6 @@ function attachDrag(card){
     if(intent==='swipe'){
       if(dx>threshold){ castVote('yes'); }
       else if(dx<-threshold){ castVote('no'); }
-      else if(dy<-threshold){ castVote('skip'); }
       else { card.style.transition='transform .2s';card.style.transform='none';card.classList.remove('show-yes','show-no'); }
     }
     dx=dy=0;intent=null;
@@ -903,25 +930,34 @@ $('anotherBook').onclick=()=>{show('intake');$('search').value='';$('results').c
 $('homeBtn').onclick=()=>{show('intake');$('search').value='';$('results').classList.remove('show');};
 
 // ---- dispensary ----
+function sectionHTML(label,rows,c,emptyMsg){
+  return `<div class="resultsect">
+    <div class="wlbl" style="color:${colorDeepVar(c)}">${esc(label)}</div>
+    ${rows.length? rows.map(b=>`
+      <div class="winrow">
+        ${b.cover?`<img src="${esc(b.cover)}" alt="">`:`<div class="wn-ph">📖</div>`}
+        <div><div class="wnt">${esc(b.title)}</div><div class="wna">${esc(b.author||"")}</div></div>
+      </div>`).join("")
+    : `<div style="color:var(--ink-soft);font-size:13px;padding:6px 0">${esc(emptyMsg)}</div>`}
+  </div>`;
+}
+
 function goDispensary(){
   const mech=STATE.mech, c=mech.color;
   document.documentElement.style.setProperty('--c-teal',colorVar(c));
-  $('dispSub').innerHTML=`Books that scratch the same itch as <b>${esc(STATE.seed.title)}</b> — ranked by what readers chose.`;
+  $('dispSub').innerHTML=`How your swipes broke down for <b>${esc(mech.label.toLowerCase())}</b>, based on <b>${esc(STATE.seed.title)}</b>.`;
 
-  // top winners for this mechanism, by ELO
-  const me=STATE.elo[mech.code]||{};
-  const ranked=Object.entries(me).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const info=STATE.profile.bookInfo||{};
-  $('winnerBox').innerHTML=`<div class="wlbl" style="color:${colorDeepVar(c)}">Top matches · ${esc(mech.label)}</div>`+
-    (ranked.length? ranked.map(([k,r])=>{
-      const b=info[k]||{title:k.split("|")[0],author:k.split("|")[1]||""};
-      return `<div class="winrow">
-        ${b.cover?`<img src="${esc(b.cover)}" alt="">`:`<div class="wn-ph">📖</div>`}
-        <div><div class="wnt">${esc(b.title)}</div><div class="wna">${esc(b.author||"")}</div></div>
-        <div class="wne" style="color:${colorDeepVar(c)};background:${colorVar(c)}28">${r}</div>
-      </div>`;
-    }).join("")
-    : `<div style="color:var(--ink-soft);font-size:13px;padding:6px 0">Cast a few votes and your top matches appear here.</div>`);
+  // this session's actual swipes — not the cross-everyone ELO table —
+  // split into the three buckets the reader actually produced
+  const votes=STATE.sessionVotes||[];
+  const yes=votes.filter(v=>v.verdict==='yes');
+  const no=votes.filter(v=>v.verdict==='no');
+  const skip=votes.filter(v=>v.verdict==='skip');
+
+  $('winnerBox').innerHTML=
+    sectionHTML(`Had the ${mech.label.toLowerCase()} vibe`, yes, c, "Cast a few yes votes and they'll land here.") +
+    sectionHTML(`Didn't have this vibe`, no, c, "Cast a few no votes and they'll land here.") +
+    sectionHTML(`Haven't read it (yet!)`, skip, c, "Tap \"Haven't read it\" on a card and it'll land here.");
 
   // dispensary CTA — worded with this session's mechanism
   const cta=$('dispCta');
