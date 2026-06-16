@@ -18,7 +18,7 @@ function bookKey(title, author) {
   return `${title}|${author || ""}`.toLowerCase();
 }
 
-async function updateElo(store, mechanismCode, title, author, verdict) {
+async function updateElo(store, mechanismCode, title, author, cover, verdict) {
   const bk = bookKey(title, author);
   const eloKey = `elo:${mechanismCode}`;
 
@@ -28,7 +28,10 @@ async function updateElo(store, mechanismCode, title, author, verdict) {
     if (raw) agg = raw;
   } catch {}
 
-  if (!agg[bk]) agg[bk] = { title, author, score: DEFAULT_ELO, yes: 0, no: 0 };
+  if (!agg[bk]) agg[bk] = { title, author, cover: cover || null, score: DEFAULT_ELO, yes: 0, no: 0 };
+  // backfill cover onto entries created before this field existed, or that
+  // were first recorded with no cover available at the time
+  if (!agg[bk].cover && cover) agg[bk].cover = cover;
 
   const entry = agg[bk];
   const cur = entry.score;
@@ -74,7 +77,7 @@ exports.handler = async function (event) {
 
     // maintain running ELO aggregate for vote events (skip is ignored)
     if (type === "vote" && (body.verdict === "yes" || body.verdict === "no")) {
-      await updateElo(store, body.mechanismCode, body.candidateTitle, body.candidateAuthor, body.verdict);
+      await updateElo(store, body.mechanismCode, body.candidateTitle, body.candidateAuthor, body.candidateCover, body.verdict);
     }
 
     return { statusCode: 200, headers: CORS_HEADERS, body: JSON.stringify({ ok: true }) };

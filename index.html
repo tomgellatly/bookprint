@@ -958,14 +958,27 @@ async function savePendingCustom(txt,r,userRejectedMapping){
     userRejectedMapping});
 }
 
+// Trims a reader's freeform "what I loved" text for the small tag badge,
+// which has limited width — the full text still shows in the lab head area.
+function truncateLabel(s,n=42){
+  s=String(s).trim();
+  return s.length>n? s.slice(0,n-1).trim()+'…' : s;
+}
+
 async function chooseMech(code, customText){
   STATE.mech=TAX_BY_CODE[code];
   STATE.customText=customText||null;
   const c=STATE.mech.color;
+  // Show the reader their OWN words while swiping — the canonical mechanism
+  // is an internal matching detail, only revealed if they open the Dispensary.
+  const displayLabel=STATE.customText? truncateLabel(STATE.customText) : STATE.mech.label;
   $('mechTag').style.background=colorDeepVar(c);
-  $('mechTagName').textContent=STATE.mech.label;
+  $('mechTagName').textContent=displayLabel;
+  $('mechTagName').title=STATE.customText||'';
   $('seedName').textContent=STATE.seed.title;
-  $('swipeQ').innerHTML=`Does this scratch the <em>${esc(STATE.mech.label.toLowerCase())}</em> itch?`;
+  $('swipeQ').innerHTML=STATE.customText
+    ? `Does this scratch <em>that</em> itch too?`
+    : `Does this scratch the <em>${esc(displayLabel.toLowerCase())}</em> itch?`;
   show('lab');
   renderDots();
   $('cardstage').innerHTML=`
@@ -1061,7 +1074,7 @@ async function castVote(verdict){ // 'yes' | 'no' | 'skip'
     STATE.profile.mechVotes[m]=(STATE.profile.mechVotes[m]||0)+1;
     await sset(ELO_KEY,STATE.elo); await sset(PROFILE_KEY,STATE.profile);
     recordEvent({type:"vote",seedTitle:STATE.seed.title,seedAuthor:STATE.seed.author,
-      mechanismCode:m,candidateTitle:c.title,candidateAuthor:c.author||"",verdict});
+      mechanismCode:m,candidateTitle:c.title,candidateAuthor:c.author||"",candidateCover:c.cover||null,verdict});
     STATE.matchCount++; renderDots();
   }
 
@@ -1158,7 +1171,10 @@ function sectionHTML(label,rows,c,emptyMsg){
 function goDispensary(){
   const mech=STATE.mech, c=mech.color;
   document.documentElement.style.setProperty('--c-teal',colorVar(c));
-  $('dispSub').innerHTML=`How your swipes broke down for <b>${esc(mech.label.toLowerCase())}</b>, based on <b>${esc(STATE.seed.title)}</b>.`;
+  // Keep the reader's own words here too — this is still "their session",
+  // not yet the canonical Dispensary view.
+  const display=STATE.customText? truncateLabel(STATE.customText,60) : mech.label.toLowerCase();
+  $('dispSub').innerHTML=`How your swipes broke down for <b>${esc(display)}</b>, based on <b>${esc(STATE.seed.title)}</b>.`;
 
   // this session's actual swipes — not the cross-everyone ELO table —
   // split into the three buckets the reader actually produced
@@ -1168,14 +1184,18 @@ function goDispensary(){
   const skip=votes.filter(v=>v.verdict==='skip');
 
   $('winnerBox').innerHTML=
-    sectionHTML(`Had the ${mech.label.toLowerCase()} vibe`, yes, c, "Cast a few yes votes and they'll land here.") +
+    sectionHTML(`Had that vibe`, yes, c, "Cast a few yes votes and they'll land here.") +
     sectionHTML(`Didn't have this vibe`, no, c, "Cast a few no votes and they'll land here.") +
     sectionHTML(`Haven't read it (yet!)`, skip, c, "Tap \"Haven't read it\" on a card and it'll land here.");
 
-  // dispensary CTA — now links through to the live graph
+  // dispensary CTA — the one place we actually name the canonical mechanism,
+  // since opening the Dispensary is what surfaces the matched taxonomy
   const cta=$('dispCta');
+  const ctaBody=STATE.customText
+    ? `We filed that under <em>${esc(mech.label.toLowerCase())}</em> — see the whole shelf`
+    : `See the whole web of <em>${esc(mech.label.toLowerCase())}</em> reads`;
   cta.innerHTML=`<span class="cta-eyebrow">Now open</span>
-    <span class="cta-main">See the whole web of <em>${esc(mech.label.toLowerCase())}</em> reads</span>
+    <span class="cta-main">${ctaBody}</span>
     <span class="cta-arrow">→</span>`;
   cta.style.setProperty('--cta-c',colorVar(c));
   cta.style.setProperty('--cta-cd',colorDeepVar(c));
