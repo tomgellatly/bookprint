@@ -829,13 +829,23 @@ async function castVote(verdict){ // 'yes' | 'no' | 'skip'
 }
 
 // ---- drag-to-swipe ----
+// Vertical page-scroll gestures were getting hijacked into yes/no votes.
+// Fix: don't decide "this is a swipe" until the finger has moved past a
+// small deadzone, and once we decide it's a vertical scroll, lock that in
+// and stop touching the card (and stop calling preventDefault) for the
+// rest of the gesture — so the browser's native scroll takes back over
+// instead of fighting us frame by frame.
 function attachDrag(card){
   if(!card) return;
   let startX=0,startY=0,dx=0,dy=0,dragging=false;
+  let intent=null; // null = undecided, 'swipe' | 'scroll' once locked
   const threshold=80;
+  const deadzone=10; // px of movement before we commit to a direction
+
   function down(e){
     if(voting)return;
     dragging=true;
+    intent=null;
     const p=e.touches?e.touches[0]:e;
     startX=p.clientX;startY=p.clientY;
     card.style.transition='none';card.style.cursor='grabbing';
@@ -844,20 +854,38 @@ function attachDrag(card){
     if(!dragging)return;
     const p=e.touches?e.touches[0]:e;
     dx=p.clientX-startX;dy=p.clientY-startY;
+
+    if(intent===null){
+      if(Math.abs(dx)<deadzone && Math.abs(dy)<deadzone) return; // not enough movement yet, wait
+      intent = Math.abs(dx)>Math.abs(dy) ? 'swipe' : 'scroll';
+      if(intent==='scroll'){
+        // hand the gesture back to the browser entirely: stop dragging the
+        // card and never call preventDefault for the rest of this touch
+        dragging=false;
+        card.style.transition='transform .2s';
+        card.style.transform='none';
+        card.classList.remove('show-yes','show-no');
+        return;
+      }
+    }
+    if(intent!=='swipe') return;
+
     const rot=dx/18;
     card.style.transform=`translate(${dx}px,${dy}px) rotate(${rot}deg)`;
     card.classList.toggle('show-yes',dx>40);
     card.classList.toggle('show-no',dx<-40);
-    if(e.cancelable && Math.abs(dx)>Math.abs(dy)) e.preventDefault();
+    if(e.cancelable) e.preventDefault(); // only blocks scroll once we've committed to a horizontal swipe
   }
   function up(){
     if(!dragging)return;
     dragging=false;card.style.cursor='grab';
-    if(dx>threshold){ castVote('yes'); }
-    else if(dx<-threshold){ castVote('no'); }
-    else if(dy<-threshold){ castVote('skip'); }
-    else { card.style.transition='transform .2s';card.style.transform='none';card.classList.remove('show-yes','show-no'); }
-    dx=dy=0;
+    if(intent==='swipe'){
+      if(dx>threshold){ castVote('yes'); }
+      else if(dx<-threshold){ castVote('no'); }
+      else if(dy<-threshold){ castVote('skip'); }
+      else { card.style.transition='transform .2s';card.style.transform='none';card.classList.remove('show-yes','show-no'); }
+    }
+    dx=dy=0;intent=null;
   }
   card.addEventListener('mousedown',down);
   window.addEventListener('mousemove',move);
