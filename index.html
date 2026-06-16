@@ -426,8 +426,7 @@ function eloUpdate(elo,mech,winKey,loseKey){
 
 // ---- GOOGLE BOOKS -----------------------------------------------------------
 function gbUrl(q){
-  // Route all requests through your Netlify proxy
-  return `/.netlify/functions/claude?searchQuery=${encodeURIComponent(q)}`;
+  return `/.netlify/functions/books?searchQuery=${encodeURIComponent(q)}`;
 }
 function pickCover(info){
   const im = info.imageLinks || {};
@@ -442,7 +441,7 @@ function pickCover(info){
 let _keyWarned=false;
 async function gbSearch(q){
   try{
-    const r=await fetch(`/.netlify/functions/claude?searchQuery=${encodeURIComponent(q)}`);
+    const r=await fetch(`/.netlify/functions/books?searchQuery=${encodeURIComponent(q)}`);
 if(!r.ok){
       if((r.status===403||r.status===400) && GOOGLE_BOOKS_KEY && !_keyWarned){
         _keyWarned=true;
@@ -495,36 +494,14 @@ async function callClaude(prompt,maxTokens){
   const data=await res.json();
   return data.text;
 }
-function parseJSON(t){
+function parseJSON(t){ 
   if (!t || typeof t !== 'string') {
-    throw new Error("The AI engine returned an empty response.");
+    throw new Error("The AI engine returned an empty or invalid response.");
   }
-  // strip markdown code fences if present
-  let cleaned = t.replace(/```json|```/g, "").trim();
-  // fast path: the whole string is already valid JSON
-  try { return JSON.parse(cleaned); } catch(e) { /* fall through */ }
-  // robust path: Claude sometimes adds a stray sentence before/after the
-  // JSON block. Extract the substring between the first { and its matching
-  // closing } (by bracket depth) and parse just that.
-  const start = cleaned.indexOf('{');
-  if (start === -1) {
-    throw new Error("The AI engine's reply didn't contain any JSON.");
-  }
-  let depth = 0, end = -1;
-  for (let i = start; i < cleaned.length; i++) {
-    if (cleaned[i] === '{') depth++;
-    else if (cleaned[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
-  }
-  if (end === -1) {
-    throw new Error("The AI engine's reply had incomplete JSON.");
-  }
-  const slice = cleaned.slice(start, end + 1);
-  try {
-    return JSON.parse(slice);
-  } catch (e2) {
-    console.warn("parseJSON failed even after extraction:", e2, "raw:", t);
-    throw new Error("The AI engine's reply couldn't be read. Try again.");
-  }
+
+  return JSON.parse(
+    t.replace(/```json|```/g, "").trim()
+  );
 }
 
 // Offer 3 mechanism options for a book (constrained to taxonomy)
@@ -537,7 +514,7 @@ You MUST choose only from these codes. Never invent one.
 LIST:
 ${tax}
 
-Return ONLY valid JSON and nothing else — no preamble, no explanation, no markdown code fences, no trailing comments. Your entire response must be parseable by JSON.parse() as-is:
+Return ONLY JSON, no prose:
 {"options":["CODE1","CODE2","CODE3"]}
 
 Book: "${title}"${author?` by ${author}`:""}.`;
@@ -557,7 +534,7 @@ Map this to the SINGLE closest mechanism code from the list (for scoring). Also 
 LIST:
 ${tax}
 
-Return ONLY valid JSON and nothing else — no preamble, no explanation, no markdown code fences, no trailing comments. Your entire response must be parseable by JSON.parse() as-is:
+Return ONLY JSON:
 {"nearest":"CODE","isNovel":true|false,"suggestedLabel":"<short label if novel, else empty>"}`;
   const out=parseJSON(await callClaude(prompt,300));
   if(!TAX_BY_CODE[out.nearest]) out.nearest=TAXONOMY[0].code;
@@ -572,7 +549,7 @@ async function candidatesFor(mechCode,seedTitle){
 
 MECHANISM: ${m.label} (${m.gloss})
 
-Exclude "${seedTitle}". Return ONLY valid JSON and nothing else — no preamble, no explanation, no markdown code fences, no trailing comments. Your entire response must be parseable by JSON.parse() as-is:
+Exclude "${seedTitle}". Return ONLY JSON, an array of objects with exact title/author as written:
 {"books":[{"title":"...","author":"..."}, ...]}
 
 LIBRARY:
