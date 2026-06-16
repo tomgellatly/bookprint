@@ -52,6 +52,7 @@
   .badge{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:700;}
   .badge-novel{background:#fff3cd;color:#856404;}
   .badge-mapped{background:#d1eddf;color:#155724;}
+  .badge-rejected{background:#fde2e1;color:#a1352b;}
 
   table{width:100%;border-collapse:collapse;font-size:13px;}
   thead th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--cream-edge);
@@ -159,6 +160,7 @@ function render(data){
     <div class="stat"><div class="sv">${customs.length}</div><div class="sl">Custom mechanisms</div></div>
     <div class="stat"><div class="sv">${new Set(votes.map(v=>v.anonId)).size}</div><div class="sl">Unique users</div></div>
     <div class="stat"><div class="sv">${customs.filter(c=>c.isNovel).length}</div><div class="sl">Novel (no match)</div></div>
+    <div class="stat"><div class="sv">${customs.filter(c=>c.userRejectedMapping).length}</div><div class="sl">User said no</div></div>
   `;
 
   // custom mechanisms
@@ -174,6 +176,7 @@ function render(data){
           ${c.isNovel
             ? `<span class="badge badge-novel">Novel</span>${c.suggestedLabel ? ' — suggested: <em>'+esc(c.suggestedLabel)+'</em>' : ''}`
             : '<span class="badge badge-mapped">Mapped</span>'}
+          ${c.userRejectedMapping ? '<span class="badge badge-rejected">User said no</span>' : ''}
           · ${ts(c.serverTimestamp)}
         </div>
       </div>
@@ -233,9 +236,9 @@ $('exportCsvBtn').onclick = () => {
   if(!_data) return;
   const { votes, customs } = _data;
   const rows = [
-    ['type','serverTimestamp','anonId','seedTitle','seedAuthor','mechanismCode','candidateTitle','candidateAuthor','verdict','rawText','nearestCode','isNovel','suggestedLabel'],
-    ...votes.map(v => ['vote', ts(v.serverTimestamp), v.anonId||'', v.seedTitle||'', v.seedAuthor||'', v.mechanismCode||'', v.candidateTitle||'', v.candidateAuthor||'', v.verdict||'','','','','']),
-    ...customs.map(c => ['custom', ts(c.serverTimestamp), c.anonId||'', c.seedTitle||'', c.seedAuthor||'','','','','', c.rawText||'', c.nearestCode||'', c.isNovel?'true':'false', c.suggestedLabel||''])
+    ['type','serverTimestamp','anonId','seedTitle','seedAuthor','mechanismCode','candidateTitle','candidateAuthor','verdict','rawText','nearestCode','isNovel','suggestedLabel','userRejectedMapping'],
+    ...votes.map(v => ['vote', ts(v.serverTimestamp), v.anonId||'', v.seedTitle||'', v.seedAuthor||'', v.mechanismCode||'', v.candidateTitle||'', v.candidateAuthor||'', v.verdict||'','','','','','']),
+    ...customs.map(c => ['custom', ts(c.serverTimestamp), c.anonId||'', c.seedTitle||'', c.seedAuthor||'','','','','', c.rawText||'', c.nearestCode||'', c.isNovel?'true':'false', c.suggestedLabel||'', c.userRejectedMapping?'true':'false'])
   ];
   const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
   download(new Blob([csv], { type: 'text/csv' }), 'bookprint-export.csv');
