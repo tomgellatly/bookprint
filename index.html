@@ -311,6 +311,32 @@
     background:var(--cream-edge);padding:4px 9px;border-radius:999px;flex-shrink:0;white-space:nowrap;}
   .graph-empty{padding:50px 20px;text-align:center;color:var(--ink-soft);font-size:13px;line-height:1.6;grid-column:1/-1;}
 
+  /* ---------- mechanism tree: seed book \u2192 its matches for one mechanism ---------- */
+  .mechtree{display:none;}
+  .mechtree.active{display:block;}
+  .mt-head{text-align:center;margin-bottom:6px;}
+  .mt-pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 14px;
+    font-size:11.5px;font-weight:700;color:#fff;margin-bottom:4px;}
+  .mt-sub{font-size:12px;color:var(--ink-soft);}
+  .mt-wrap{position:relative;padding:18px 4px 8px;}
+  .mt-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+  .mt-root{display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;z-index:1;
+    margin-bottom:34px;}
+  .mt-card{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--paper-2);
+    border-radius:14px;padding:10px 12px 11px;box-shadow:0 3px 12px var(--shadow);width:108px;
+    position:relative;z-index:1;text-align:center;}
+  .mt-card.is-root{width:124px;border:2px solid var(--mt-c,var(--c-teal));}
+  .mt-cov{width:54px;height:80px;border-radius:8px;object-fit:cover;background:var(--cream-edge);
+    box-shadow:0 2px 8px var(--shadow);}
+  .mt-ph{width:54px;height:80px;border-radius:8px;background:linear-gradient(135deg,var(--cream-edge),#ddd4c2);
+    display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .mt-title{font-family:'Fraunces',serif;font-weight:600;font-size:11.5px;line-height:1.22;}
+  .mt-author{font-size:9.5px;color:var(--ink-soft);line-height:1.2;}
+  .mt-votes{font-size:9.5px;font-weight:700;color:var(--ink-soft);background:var(--cream-edge);
+    border-radius:999px;padding:2px 8px;margin-top:1px;}
+  .mt-branches{display:flex;flex-wrap:wrap;justify-content:center;gap:20px 14px;position:relative;z-index:1;}
+  .mt-emptynote{text-align:center;color:var(--ink-soft);font-size:12.5px;padding:20px 10px;}
+
   footer{text-align:center;padding:14px;font-size:11px;color:var(--ink-faint);}
   footer b{color:var(--ink-soft);}
   .readercount{color:var(--c-lime-d);font-weight:800;position:relative;padding-left:11px;}
@@ -459,6 +485,7 @@
         </div>
       </div>
       <div class="tracklist" id="tracklist"></div>
+      <div class="mechtree" id="mechtree"></div>
     </div>
   </section>
 
@@ -1213,7 +1240,7 @@ function shareText(){
   return `📖 Bookprint\nLoved ${seed} for "${mech.label}"?\n${topName?`Top match so far: ${topName}\n`:""}\nFind what scratches your itch → Bookprint`;
 }
 $('shareDisp').onclick=()=>{const t=shareText();if(navigator.share)navigator.share({text:t}).catch(()=>copy(t));else copy(t);};
-$('dispCta').onclick=()=>openGraph(STATE.mech?STATE.mech.code:null,'disp');
+$('dispCta').onclick=()=>openGraph(STATE.mech?STATE.mech.code:null,'disp',STATE.seed);
 $('graphBack').onclick=()=>GRAPH.goBack();
 function copy(t){navigator.clipboard?.writeText(t).then(()=>toast("Copied")).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast("Copied");}catch(e){}a.remove();});}
 
@@ -1226,11 +1253,12 @@ function mechColor(code){ const m=TAX_BY_CODE[code]; return m? colorVar(m.color)
 function mechColorD(code){ const m=TAX_BY_CODE[code]; return m? colorDeepVar(m.color) : '#666'; }
 function mechLabel(code){ const m=TAX_BY_CODE[code]; return m? m.label : code; }
 
-async function load(presetMech){
+async function load(presetMech,seedOverride){
   const grid=$('playlistGrid');
   grid.innerHTML=`<div class="loading" style="padding:60px 0;text-align:center;color:var(--ink-faint);grid-column:1/-1">
     <div class="spinner" style="margin:0 auto 10px"></div>Gathering the playlists…</div>`;
   $('tracklist').classList.remove('active');
+  $('mechtree').classList.remove('active');
   try{
     const res=await fetch('/.netlify/functions/graph');
     if(!res.ok) throw new Error('graph fetch '+res.status);
@@ -1247,7 +1275,7 @@ async function load(presetMech){
   renderGrid();
   if(presetMech){
     const pl=playlists.find(p=>p.code===presetMech);
-    if(pl){ showTracklist(pl); return; }
+    if(pl){ showTree(pl,seedOverride||null); return; }
   }
 }
 
@@ -1267,7 +1295,9 @@ function renderGrid(){
   $('playlistGrid').querySelectorAll('.pl-card').forEach(el=>{
     el.onclick=()=>{
       const pl=playlists.find(p=>p.code===el.dataset.code);
-      if(pl) showTracklist(pl);
+      // browsing from the grid with no specific seed in hand — root the tree
+      // on the mechanism's current top-voted book instead
+      if(pl) showTree(pl,null,3);
     };
   });
 }
@@ -1305,6 +1335,90 @@ function backToGrid(){
   inTracklist=false;
   $('playlistGrid').style.display='';
   $('tracklist').classList.remove('active');
+  $('mechtree').classList.remove('active');
+}
+
+// Seed-centered tree: the book the reader started from (or, with no seed in
+// context, the mechanism's current top-voted book) sits at the top, with up
+// to a handful of other books in the same mechanism fanned out below it.
+// Line thickness/opacity = combined vote weight of that connection.
+function showTree(pl,seedBook,maxBranches){
+  inTracklist=true;
+  document.documentElement.style.setProperty('--c-teal',mechColor(pl.code));
+  $('playlistGrid').style.display='none';
+  $('tracklist').classList.remove('active');
+
+  const seedKey=seedBook? (seedBook.title+"|"+(seedBook.author||"")).toLowerCase() : null;
+  let root, branches;
+  if(seedKey){
+    const inPl=pl.books.find(b=>(b.title+"|"+(b.author||"")).toLowerCase()===seedKey);
+    root=inPl||{title:seedBook.title,author:seedBook.author||"",cover:seedBook.cover||null,votes:0};
+    branches=pl.books.filter(b=>(b.title+"|"+(b.author||"")).toLowerCase()!==seedKey).slice(0,maxBranches||8);
+  } else {
+    root=pl.books[0];
+    branches=pl.books.slice(1,(maxBranches||3)+1);
+  }
+
+  const tree=$('mechtree');
+  tree.classList.add('active');
+  tree.innerHTML=`
+    <div class="mt-head">
+      <span class="mt-pill" style="background:${mechColor(pl.code)}">${esc(mechLabel(pl.code))}</span>
+      <div class="mt-sub">${seedKey? `Branching out from <b>${esc(root.title)}</b>` : `Top books readers say share this`}</div>
+    </div>
+    <div class="mt-wrap" id="mtWrap" style="--mt-c:${mechColor(pl.code)}">
+      <svg class="mt-svg" id="mtSvg"></svg>
+      <div class="mt-root">${cardHTML(root,true)}</div>
+      <div class="mt-branches" id="mtBranches">
+        ${branches.length? branches.map(b=>cardHTML(b,false)).join("")
+          : `<div class="mt-emptynote">No other books matched on this yet — be the first to vote one in!</div>`}
+      </div>
+    </div>`;
+  $('graphSub').textContent="Follow the lines from a book you loved.";
+
+  // draw connectors after layout settles, so getBoundingClientRect is accurate
+  requestAnimationFrame(()=>drawTreeLines(branches,mechColor(pl.code)));
+}
+
+function cardHTML(b,isRoot){
+  return `<div class="mt-card${isRoot?' is-root':''}" data-key="${esc((b.title+'|'+(b.author||'')).toLowerCase())}">
+    ${b.cover?`<img class="mt-cov" src="${esc(b.cover)}" alt="">`:`<div class="mt-ph">📖</div>`}
+    <div class="mt-title">${esc(truncate(b.title,30))}</div>
+    <div class="mt-author">${esc(b.author||"")}</div>
+    ${(b.votes||0)>0?`<div class="mt-votes">${b.votes} vote${b.votes===1?'':'s'}</div>`:''}
+  </div>`;
+}
+function truncate(s,n){ s=String(s); return s.length>n? s.slice(0,n-1).trim()+'…' : s; }
+
+function drawTreeLines(branches,color){
+  const wrap=$('mtWrap'), svg=$('mtSvg');
+  if(!wrap||!svg) return;
+  const wrapRect=wrap.getBoundingClientRect();
+  svg.setAttribute('width',wrapRect.width);
+  svg.setAttribute('height',wrapRect.height);
+  svg.setAttribute('viewBox',`0 0 ${wrapRect.width} ${wrapRect.height}`);
+
+  const rootCard=wrap.querySelector('.mt-root .mt-card');
+  if(!rootCard){ svg.innerHTML=''; return; }
+  const rootR=rootCard.getBoundingClientRect();
+  const rootX=rootR.left+rootR.width/2-wrapRect.left;
+  const rootY=rootR.bottom-wrapRect.top;
+
+  const maxVotes=Math.max(1,...branches.map(b=>b.votes||0));
+  let paths='';
+  wrap.querySelectorAll('#mtBranches .mt-card').forEach((card,i)=>{
+    const r=card.getBoundingClientRect();
+    const x=r.left+r.width/2-wrapRect.left;
+    const y=r.top-wrapRect.top;
+    const midY=rootY+(y-rootY)*0.45;
+    const votes=branches[i]?branches[i].votes||0:0;
+    const w=1.5+ (votes/maxVotes)*4.5;
+    const op=0.35+ (votes/maxVotes)*0.55;
+    paths+=`<path d="M${rootX},${rootY} C${rootX},${midY} ${x},${midY} ${x},${y}"
+      fill="none" stroke="${color}" stroke-width="${w.toFixed(1)}" stroke-opacity="${op.toFixed(2)}"
+      stroke-linecap="round"/>`;
+  });
+  svg.innerHTML=paths;
 }
 
 function goBack(){
@@ -1312,18 +1426,19 @@ function goBack(){
   show(returnView);
 }
 
-function open(presetMech,fromView){
+function open(presetMech,fromView,seedOverride){
   inTracklist=false;
   returnView=fromView||'intake';
   $('playlistGrid').style.display='';
   $('tracklist').classList.remove('active');
+  $('mechtree').classList.remove('active');
   show('graph');
-  load(presetMech);
+  load(presetMech,seedOverride);
 }
 
 return {open,goBack};
 })();
-function openGraph(presetMech,fromView){ GRAPH.open(presetMech,fromView); }
+function openGraph(presetMech,fromView,seedOverride){ GRAPH.open(presetMech,fromView,seedOverride); }
 
 // ---- reader counter (baseline + real votes, fetched fresh on load) ----
 async function loadReaderCount(){
